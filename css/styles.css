@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700;900&display=swap');
+
+body {
+    background-color: #8b5cf6;
+    background-image: radial-gradient(#a881af 1px, transparent 1px);
+    background-size: 20px 20px;
+    font-family: 'Nunito', sans-serif;
+    touch-action: manipulation;
+    overflow-x: hidden;
+}
+
+/* Estilos UI Base (Cuaderno) */
+.notebook {
+    background-color: #fffdf8;
+    background-image: linear-gradient(#e5e7eb 1px, transparent 1px);
+    background-size: 100% 3rem;
+    background-position: 0 3rem;
+    box-shadow: 10px 10px 30px rgba(0,0,0,0.2), inset 40px 0 0 #fca5a5;
+    border-radius: 8px 16px 16px 8px;
+    position: relative;
+}
+.notebook::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 45px;
+    width: 2px;
+    background-color: #ef4444;
+    opacity: 0.5;
+}
+.notebook-holes {
+    position: absolute;
+    left: 10px;
+    top: 2rem;
+    bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.hole {
+    width: 15px;
+    height: 15px;
+    background-color: #8b5cf6;
+    border-radius: 50%;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.math-font {
+    font-family: 'Patrick Hand', cursive;
+    line-height: 3rem;
+}
+
+/* Interactividad Drag & Drop (Ecuaciones) */
+.draggable {
+    cursor: grab;
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 8px;
+    background-color: rgba(253, 224, 71, 0.4);
+    border: 2px dashed #eab308;
+    transition: background-color 0.2s;
+    user-select: none;
+    z-index: 50;
+    touch-action: none; /* Crucial para evitar scroll en móviles al arrastrar */
+}
+.draggable:hover {
+    background-color: rgba(253, 224, 71, 0.8);
+}
+.draggable:active {
+    cursor: grabbing;
+}
+.magic-bridge {
+    transition: all 0.3s ease;
+}
+.bridge-active {
+    color: #ec4899;
+    text-shadow: 0 0 15px #f472b6;
+    transform: scale(1.2);
+}
+.bridge-flipped {
+    color: #ef4444;
+    text-shadow: 0 0 20px #f87171;
+    transform: scale(1.4) rotate(180deg);
+}
+
+/* Interactividad Clics (Polinomios) */
+.poly-op {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+.poly-op:hover {
+    color: #ec4899;
+    border-bottom: 3px dashed #ec4899;
+    transform: scale(1.2);
+}
+.poly-paren {
+    color: #8b5cf6;
+    font-weight: bold;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-5px) rotate(-2deg); }
+    50% { transform: translateX(5px) rotate(2deg); }
+}
+.animate-shake {
+    animation: shake 0.4s ease-in-out;
+}
+
+#confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Ocultar elementos */
+.hidden-el {
+    display: none !important;
+}

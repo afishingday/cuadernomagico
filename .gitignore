@@ -1,0 +1,10 @@
+# API key (crear js/config.js desde js/config.example.js y no subirlo)
+js/config.js
+
+# Entorno y editor
+.env
+.env.local
+.vscode/
+.idea/
+*.log
+node_modules/
