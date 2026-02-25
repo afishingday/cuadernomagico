@@ -24,14 +24,19 @@ var App = {
       ],
       tecnologia: [
         { id: "circuitos", name: "Circuitos Digitales", icon: "🔌", desc: "Álgebra de Boole y Lógica" }
+      ],
+      quimica: [
+        { id: "balanceo", name: "Balanceo de Ecuaciones", icon: "⚖️", desc: "Conservación de la materia" }
       ]
     }
   },
 
+  // theme y headerColor con clases completas para que Tailwind CDN no las purgue al añadir nuevas materias
   subjectStyles: {
-    matematicas: { icon: "🧮", name: "Matemáticas", color: "emerald" },
-    tecnologia: { icon: "🤖", name: "Tecnología", color: "cyan" },
-    ingles: { icon: "🇬🇧", name: "Inglés", color: "blue" }
+    matematicas: { icon: "🧮", name: "Matemáticas", theme: "bg-white border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600", headerColor: "text-emerald-700" },
+    tecnologia: { icon: "🤖", name: "Tecnología", theme: "bg-white border-cyan-200 hover:border-cyan-300 hover:bg-cyan-50 text-cyan-600", headerColor: "text-cyan-700" },
+    ingles: { icon: "🇬🇧", name: "Inglés", theme: "bg-white border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600", headerColor: "text-blue-700" },
+    quimica: { icon: "🧪", name: "Química", theme: "bg-white border-fuchsia-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 text-fuchsia-600", headerColor: "text-fuchsia-700" }
   },
 
   theories: {
@@ -73,6 +78,15 @@ var App = {
         "<b>Compuerta OR (O):</b> Representa la suma booleana (A + B). Da como resultado <b>1</b> si al menos una de las entradas es <b>1</b>.",
         "<b>Compuerta NOT (NO):</b> Actúa como un inversor lógico (A'). Transforma un 1 en 0 y viceversa.",
         "<b>Jerarquía Lógica:</b> Al igual que en aritmética, resuelve primero los paréntesis internos."
+      ]
+    },
+    balanceo: {
+      title: "💡 Balanceo de Ecuaciones Químicas (11º Grado)",
+      desc: "La materia no se crea ni se destruye, solo se transforma (Ley de Lavoisier). ¡Debe haber la misma cantidad de átomos a ambos lados de la flecha!",
+      tips: [
+        "<b>Coeficientes:</b> Solo puedes cambiar los números grandes que van ANTES de la molécula. ¡No toques los subíndices (números pequeños)!",
+        "<b>Orden mágico:</b> Intenta balancear primero los <b>Metales</b>, luego <b>No Metales</b>, después el <b>Hidrógeno (H)</b> y deja siempre el <b>Oxígeno (O)</b> para el final.",
+        "<b>Multiplicación:</b> El coeficiente multiplica a TODOS los átomos de esa molécula (Ej: 2 H₂O significa 4 H y 2 O)."
       ]
     },
     vocabulario: {
@@ -120,13 +134,11 @@ var App = {
       var self = this;
       availableSubjects.forEach(function (subjKey) {
         var style = self.subjectStyles[subjKey];
+        if (!style || !style.theme) return;
         var btn = document.createElement("button");
         btn.onclick = function () { self.selectSubject(subjKey); };
-        var colorBorders = "border-" + style.color + "-200 hover:border-" + style.color + "-300";
-        var colorBgHover = "hover:bg-" + style.color + "-50";
-        var colorText = "text-" + style.color + "-600";
-        btn.className = "flex-1 bg-white border-b-[10px] rounded-[2rem] p-10 transition-all transform hover:-translate-y-2 active:translate-y-1 active:border-b-4 group cursor-pointer shadow-2xl flex flex-col items-center min-w-[200px] " + colorBgHover + " " + colorBorders;
-        btn.innerHTML = "<div class=\"text-7xl md:text-8xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform\">" + style.icon + "</div><h3 class=\"text-4xl md:text-5xl font-black " + colorText + "\">" + style.name + "</h3>";
+        btn.className = "flex-1 border-b-[10px] rounded-[2rem] p-4 sm:p-6 md:p-8 transition-all transform hover:-translate-y-2 active:translate-y-1 active:border-b-4 group cursor-pointer shadow-2xl flex flex-col items-center min-w-[140px] sm:min-w-[180px] max-w-[300px] w-full mx-auto " + style.theme;
+        btn.innerHTML = "<div class=\"text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-3 md:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform\">" + style.icon + "</div><h3 class=\"text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-center leading-tight w-full tracking-tight px-1\">" + style.name + "</h3>";
         subjectsContainer.appendChild(btn);
       });
     }
@@ -147,7 +159,9 @@ var App = {
     var topicData = this.curriculum[this.grade][this.subject].find(function (t) { return t.id === topicId; });
 
     var headerEl = document.getElementById("game-header-title");
-    headerEl.innerHTML = "<span class=\"opacity-60 text-" + style.color + "-700 hidden md:inline\">" + style.icon + " " + style.name + "</span> <span class=\"mx-1 hidden md:inline opacity-50\">👉</span> <span class=\"text-slate-800\">" + topicData.icon + " " + topicData.name + "</span>";
+    var headerColorClass = style.headerColor || "text-slate-700";
+    headerEl.className = "text-lg md:text-2xl font-black text-center flex-1 " + headerColorClass;
+    headerEl.innerHTML = "<span class=\"opacity-60 hidden md:inline\">" + style.icon + " " + style.name + "</span> <span class=\"mx-1 hidden md:inline opacity-50\">👉</span> <span class=\"text-slate-800\">" + topicData.icon + " " + topicData.name + "</span>";
 
     this.generateContent();
     this.setView("game");
@@ -163,8 +177,8 @@ var App = {
       topicsList.forEach(function (t) {
         var btn = document.createElement("button");
         btn.onclick = function () { self.selectTopic(t.id); };
-        btn.className = "flex-1 min-w-[250px] max-w-[300px] bg-white border-b-[8px] border-indigo-200 hover:border-indigo-400 rounded-3xl p-8 transition-all transform hover:-translate-y-2 active:translate-y-1 active:border-b-4 group cursor-pointer shadow-xl flex flex-col items-center text-center";
-        btn.innerHTML = "<div class=\"text-6xl mb-4 group-hover:scale-110 transition-transform\">" + t.icon + "</div><h3 class=\"text-2xl md:text-3xl font-black text-indigo-700 mb-2 leading-tight\">" + t.name + "</h3><p class=\"text-slate-500 font-bold text-sm md:text-base\">" + t.desc + "</p>";
+        btn.className = "flex-1 min-w-[160px] sm:min-w-[200px] max-w-[300px] w-full bg-white border-b-[8px] border-indigo-200 hover:border-indigo-400 rounded-3xl p-4 sm:p-6 transition-all transform hover:-translate-y-2 active:translate-y-1 active:border-b-4 group cursor-pointer shadow-xl flex flex-col items-center text-center mx-auto";
+        btn.innerHTML = "<div class=\"text-5xl md:text-6xl mb-3 group-hover:scale-110 transition-transform\">" + t.icon + "</div><h3 class=\"text-lg sm:text-xl md:text-2xl font-black text-indigo-700 mb-2 leading-tight w-full tracking-tight\">" + t.name + "</h3><p class=\"text-slate-500 font-bold text-xs sm:text-sm md:text-base w-full\">" + t.desc + "</p>";
         container.appendChild(btn);
       });
     } else {
@@ -201,6 +215,7 @@ var App = {
 
     if (typeof EqGame !== "undefined") EqGame.cleanup();
     if (typeof IneqGame !== "undefined") IneqGame.cleanup();
+    if (typeof ChemGame !== "undefined") ChemGame.cleanup();
 
     document.getElementById("game-content").classList.remove("hidden-el");
     document.getElementById("coming-soon-area").classList.add("hidden-el");
@@ -209,6 +224,7 @@ var App = {
     else if (this.topic === "polinomios") PolyGame.start(this.level);
     else if (this.topic === "inecuaciones") IneqGame.start(this.level);
     else if (this.topic === "circuitos") CircuitGame.start(this.level);
+    else if (this.topic === "balanceo") ChemGame.start(this.level);
     else if (this.topic === "vocabulario") EnglishGame.start(this.level);
   },
 
@@ -242,6 +258,8 @@ var App = {
       prompt = "Eres un profesor experto de matemáticas para grado 11. El estudiante está resolviendo la inecuación lineal: X " + ineqStr + ". Dale una pista breve (máximo 2 oraciones). Si el valor a despejar está multiplicando/dividiendo y es NEGATIVO, recuérdale sutilmente la regla de oro de invertir la boquita (desigualdad). Si ya está en la fase de elegir el intervalo, recuérdale cómo traducir los signos >, <, ≥, ≤ a paréntesis o corchetes.";
     } else if (this.topic === "circuitos") {
       prompt = "Eres un profesor de tecnología muy creativo. El estudiante (grado 11) resuelve un circuito lógico con compuertas booleanas AND, OR, NOT. Explica muy brevemente (máximo 2 oraciones) el secreto para resolver la compuerta AND u OR usando una analogía cotidiana, para que deduzca qué pasa con los unos y ceros.";
+    } else if (this.topic === "balanceo") {
+      prompt = "Eres un profesor de química. El estudiante está balanceando esta ecuación: " + ChemGame.getEquationString() + ". Ayúdalo con una pista muy sutil en ESPAÑOL (máximo 2 oraciones). Dile qué elemento o átomo debería revisar o ajustar primero (recuerda que el Oxígeno e Hidrógeno se dejan para el final) sin darle los coeficientes exactos de la respuesta.";
     } else if (this.topic === "vocabulario") {
       prompt = "Eres un tutor de inglés. El estudiante debe adivinar la palabra en inglés: \"" + EnglishGame.currentWord.en + "\". Dale una pista divertida en ESPAÑOL describiendo qué es, su color, un sonido que hace o dónde se encuentra, para que pueda deducir su traducción. Máximo 2 oraciones. NO uses la traducción al español explícita en tu respuesta.";
     }
