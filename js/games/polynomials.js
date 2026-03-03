@@ -33,6 +33,26 @@ var PolyGame = {
     }
   },
 
+  showExample: function (container) {
+    var originalStr = "3 + 4 × 2";
+    var op = "×";
+    var left = 4;
+    var right = 2;
+    var res = 8;
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2\">Ejemplo de guía:<br><span class=\"text-3xl text-slate-800 math-font ml-4\">" +
+      originalStr + "</span></p>" +
+      "<p class=\"font-bold text-indigo-800 mb-2\"><b>Jerarquía Mágica:</b> 1º ( ), 2º × y ÷, 3º + y -</p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3\">" +
+      "<li>Observa la jerarquía. La operación de mayor rango que debes resolver primero es la <b>multiplicación</b>. En este caso: <span class=\"bg-yellow-200 px-2 rounded\">" +
+      left + " " + op + " " + right + "</span>.</li>" +
+      "<li>Si tocas ese operador (<b>" + op + "</b>), el cuaderno te pedirá que calcules ese pequeño pedazo. El resultado es <b>" + res + "</b>.</li>" +
+      "<li>Al acertar, el cuaderno reemplazará esa cuenta por el <b>" + res + "</b>, haciendo el polinomio más corto (quedaría 3 + 8). ¡Y repites el proceso!</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   getCorrectOpIndex: function () {
     var startP = -1, endP = -1;
     for (var i = 0; i < this.tokens.length; i++) {

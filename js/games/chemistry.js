@@ -91,6 +91,19 @@ var ChemGame = {
     this.eqData.right.forEach(function (m) { m.coef = 1; });
   },
 
+  showExample: function (container) {
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Método de Tanteo</p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3\">" +
+      "<li><b>Identifica átomos:</b> Haz una lista mental de los átomos presentes (ej. imagina una ecuación con H y O).</li>" +
+      "<li><b>Cuenta:</b> Revisa cuántos hay de cada lado. Si a la izquierda hay 2 de H y a la derecha solo 1, ¡están desbalanceados!</li>" +
+      "<li><b>Multiplica:</b> Presiona los botones <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">+</span> y <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">-</span> para cambiar el número grande (coeficiente). Este número multiplicará a TODOS los átomos de esa molécula.</li>" +
+      "<li><b>Comprueba:</b> Cuando creas que tienes exactamente el mismo número de todos los átomos a la izquierda y a la derecha de la flecha, presiona \"¡Comprobar Balanceo!\".</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   changeCoef: function (side, idx, delta) {
     var mol = this.eqData[side][idx];
     mol.coef += delta;

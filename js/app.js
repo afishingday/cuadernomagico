@@ -12,7 +12,11 @@ var App = {
     "5": {
       matematicas: [
         { id: "ecuaciones", name: "Ecuaciones", icon: "⚖️", desc: "Descubre el valor oculto de X" },
-        { id: "polinomios", name: "Polinomios", icon: "🎢", desc: "Jerarquía de operaciones" }
+        { id: "polinomios", name: "Polinomios", icon: "🎢", desc: "Jerarquía de operaciones" },
+        { id: "potencias", name: "Potencias", icon: "🚀", desc: "Multiplicaciones repetidas" },
+        { id: "fracciones", name: "Fracciones", icon: "🍕", desc: "Partes de un todo (Sumas/Restas)" },
+        { id: "geometria", name: "Geometría", icon: "📐", desc: "Áreas y perímetros" },
+        { id: "estadistica", name: "Estadística", icon: "📊", desc: "Media, mediana y moda" }
       ],
       ingles: [
         { id: "vocabulario", name: "Vocabulario IA", icon: "✨", desc: "Aprende palabras generadas por IA" }
@@ -57,6 +61,39 @@ var App = {
         "<b>2º Multiplicación × y División ÷ :</b> Son más fuertes que las sumas y restas.",
         "<b>3º Sumas + y Restas - :</b> Se dejan para el final.",
         "<b>Tip:</b> Si hay varias del mismo nivel, resuélvelas de <b>izquierda a derecha</b>."
+      ]
+    },
+    potencias: {
+      title: "💡 Potenciación (5º Grado)",
+      desc: "Una potencia es una forma rápida de escribir una multiplicación que se repite muchas veces.",
+      tips: [
+        "<b>La Base:</b> Es el número grande. Es el número que se va a multiplicar.",
+        "<b>El Exponente:</b> Es el número pequeñito arriba. ¡Te dice <b>cuántas veces</b> debes escribir la base para multiplicarla!",
+        "<b>¡Ojo!</b> 3² NO es 3x2. Significa multiplicar el 3 por sí mismo dos veces: <b>3 x 3 = 9</b>."
+      ]
+    },
+    fracciones: {
+      title: "💡 Fracciones (5º Grado)",
+      desc: "Las fracciones representan partes de algo entero (como porciones de una pizza).",
+      tips: [
+        "<b>Homogéneas (Fáciles):</b> Si los números de abajo (denominadores) son IGUALES, solo suma o resta los de arriba y deja el mismo abajo.",
+        "<b>Heterogéneas (Desafiantes):</b> Si los números de abajo son DISTINTOS, tienes que hacer la 'Carita Feliz' (multiplicar en cruz y luego los denominadores entre sí)."
+      ]
+    },
+    geometria: {
+      title: "💡 Áreas y Perímetros (5º Grado)",
+      desc: "En geometría es muy importante no confundir el borde con el relleno de una figura.",
+      tips: [
+        "<b>Perímetro:</b> Es la medida de TODO el borde. ¡Para calcularlo debes <b>sumar</b> todos sus lados!",
+        "<b>Área:</b> Es la medida del relleno interior. En cuadrados o rectángulos se calcula <b>multiplicando la Base por la Altura</b>."
+      ]
+    },
+    estadistica: {
+      title: "💡 Estadística Básica (5º Grado)",
+      desc: "Analizar datos nos ayuda a entenderlos y sacar conclusiones útiles.",
+      tips: [
+        "<b>Moda:</b> Piensa en 'estar a la moda'. Es simplemente el número que <b>MÁS se repite</b> en todo el grupo.",
+        "<b>Media (Promedio):</b> Repartir en partes iguales. Debes <b>sumar</b> todos los números y luego <b>dividir</b> ese resultado entre la cantidad total de números."
       ]
     },
     inecuaciones: {
@@ -208,20 +245,75 @@ var App = {
     }
   },
 
+  // --- Tutorial paso a paso (modal) ---
+  showExample: function () {
+    var container = document.getElementById("example-content");
+    if (!container) {
+      // Si el modal aún no existe en el DOM, no rompemos nada
+      App.updateTeacher("Paso a paso en construcción", "Pronto tendrás un tutorial guiado para este tema. Mientras tanto, sigue las indicaciones del profesor mágico. ✨");
+      return;
+    }
+    container.innerHTML = "";
+
+    if (this.topic === "ecuaciones" && typeof EqGame !== "undefined" && typeof EqGame.showExample === "function") {
+      EqGame.showExample(container);
+    } else if (this.topic === "polinomios" && typeof PolyGame !== "undefined" && typeof PolyGame.showExample === "function") {
+      PolyGame.showExample(container);
+    } else if (this.topic === "potencias" && typeof PowerGame !== "undefined" && typeof PowerGame.showExample === "function") {
+      PowerGame.showExample(container);
+    } else if (this.topic === "fracciones" && typeof FracGame !== "undefined" && typeof FracGame.showExample === "function") {
+      FracGame.showExample(container);
+    } else if (this.topic === "geometria" && typeof GeoGame !== "undefined" && typeof GeoGame.showExample === "function") {
+      GeoGame.showExample(container);
+    } else if (this.topic === "estadistica" && typeof StatGame !== "undefined" && typeof StatGame.showExample === "function") {
+      StatGame.showExample(container);
+    } else if (this.topic === "inecuaciones" && typeof IneqGame !== "undefined" && typeof IneqGame.showExample === "function") {
+      IneqGame.showExample(container);
+    } else if (this.topic === "circuitos" && typeof CircuitGame !== "undefined" && typeof CircuitGame.showExample === "function") {
+      CircuitGame.showExample(container);
+    } else if (this.topic === "balanceo" && typeof ChemGame !== "undefined" && typeof ChemGame.showExample === "function") {
+      ChemGame.showExample(container);
+    } else if (this.topic === "vocabulario" && typeof EnglishGame !== "undefined" && typeof EnglishGame.showExample === "function") {
+      EnglishGame.showExample(container);
+    } else {
+      container.innerHTML = "<p class=\"text-slate-500\">El paso a paso para este ejercicio está en construcción.</p>";
+    }
+
+    var modal = document.getElementById("example-modal");
+    if (modal) modal.classList.remove("hidden-el");
+  },
+
+  hideExample: function () {
+    var modal = document.getElementById("example-modal");
+    if (modal) modal.classList.add("hidden-el");
+  },
+
   generateContent: function () {
     document.getElementById("lines-container").innerHTML = "";
     document.getElementById("success-area").classList.add("hidden-el");
+    this.hideExample();
     this.updateTheory();
 
     if (typeof EqGame !== "undefined") EqGame.cleanup();
     if (typeof IneqGame !== "undefined") IneqGame.cleanup();
     if (typeof ChemGame !== "undefined") ChemGame.cleanup();
+    if (typeof PolyGame !== "undefined") PolyGame.cleanup && PolyGame.cleanup();
+    if (typeof PowerGame !== "undefined") PowerGame.cleanup && PowerGame.cleanup();
+    if (typeof FracGame !== "undefined") FracGame.cleanup && FracGame.cleanup();
+    if (typeof GeoGame !== "undefined") GeoGame.cleanup && GeoGame.cleanup();
+    if (typeof StatGame !== "undefined") StatGame.cleanup && StatGame.cleanup();
+    if (typeof CircuitGame !== "undefined") CircuitGame.cleanup && CircuitGame.cleanup();
+    if (typeof EnglishGame !== "undefined") EnglishGame.cleanup && EnglishGame.cleanup();
 
     document.getElementById("game-content").classList.remove("hidden-el");
     document.getElementById("coming-soon-area").classList.add("hidden-el");
 
     if (this.topic === "ecuaciones") EqGame.start(this.level);
     else if (this.topic === "polinomios") PolyGame.start(this.level);
+    else if (this.topic === "potencias") PowerGame.start(this.level);
+    else if (this.topic === "fracciones") FracGame.start(this.level);
+    else if (this.topic === "geometria") GeoGame.start(this.level);
+    else if (this.topic === "estadistica") StatGame.start(this.level);
     else if (this.topic === "inecuaciones") IneqGame.start(this.level);
     else if (this.topic === "circuitos") CircuitGame.start(this.level);
     else if (this.topic === "balanceo") ChemGame.start(this.level);
@@ -251,8 +343,17 @@ var App = {
     if (this.topic === "ecuaciones") {
       var eqStr = EqGame.eq.op + " " + EqGame.eq.val + " = " + EqGame.eq.res;
       prompt = "Eres un tutor infantil mágico de matemáticas. El niño está intentando despejar la X en la ecuación: X " + eqStr + ". Dale una pista corta (1-2 oraciones como máximo) y divertida usando analogías de equilibrio o magia, sin decirle el resultado exacto ni decirle cómo hacerlo directamente. Anímalo.";
-                } else if (this.topic === "polinomios") {
+    } else if (this.topic === "polinomios") {
       prompt = "Eres un tutor infantil mágico. El niño está resolviendo un polinomio y tiene que decidir qué operación resolver primero (según la regla PEMDAS). Dale una pequeña pista o recordatorio (máximo 2 oraciones) sobre quiénes son los \"reyes\" o las operaciones más fuertes, de forma divertida, sin resolver el problema por él.";
+    } else if (this.topic === "potencias") {
+      prompt = "Eres un tutor matemático divertido. El niño calcula " + PowerGame.eq.base + " elevado a la " + PowerGame.eq.exp + ". Recuérdale con una analogía que no debe multiplicar " + PowerGame.eq.base + "x" + PowerGame.eq.exp + ", sino multiplicar la base por sí misma. Máximo 2 oraciones.";
+    } else if (this.topic === "fracciones") {
+      var fStr = FracGame.eq.n1 + "/" + FracGame.eq.d1 + " " + FracGame.eq.op + " " + FracGame.eq.n2 + "/" + FracGame.eq.d2;
+      prompt = "Eres un tutor infantil matemático. El estudiante suma/resta la fracción: " + fStr + ". Dale una pista mágica (máximo 2 oraciones) indicando qué hacer con los denominadores (abajo) o numeradores (arriba). NO resuelvas la cuenta numérica.";
+    } else if (this.topic === "geometria") {
+      prompt = "Eres un tutor matemático mágico. El niño calcula el " + GeoGame.eq.target + " de un " + GeoGame.eq.type + " de " + GeoGame.eq.w + " por " + GeoGame.eq.h + ". Dale una pista recordando en qué consiste el perímetro (borde) o área (relleno) sin decirle la respuesta numérica. Máximo 2 oraciones.";
+    } else if (this.topic === "estadistica") {
+      prompt = "Eres un tutor estadístico infantil. El estudiante debe hallar la " + StatGame.eq.target + " de los números: " + StatGame.eq.nums.join(", ") + ". Dale una pista recordando la definición de esa métrica sin darle la respuesta. Máximo 2 oraciones.";
     } else if (this.topic === "inecuaciones") {
       var ineqStr = IneqGame.eq.op + " " + IneqGame.eq.val + " " + IneqGame.eq.sign + " " + IneqGame.eq.res;
       prompt = "Eres un profesor experto de matemáticas para grado 11. El estudiante está resolviendo la inecuación lineal: X " + ineqStr + ". Dale una pista breve (máximo 2 oraciones). Si el valor a despejar está multiplicando/dividiendo y es NEGATIVO, recuérdale sutilmente la regla de oro de invertir la boquita (desigualdad). Si ya está en la fase de elegir el intervalo, recuérdale cómo traducir los signos >, <, ≥, ≤ a paréntesis o corchetes.";

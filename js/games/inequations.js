@@ -48,6 +48,32 @@ var IneqGame = {
     }
   },
 
+  showExample: function (container) {
+    var isMultNeg = this.eq && this.eq.type === "mult_neg";
+    var exStr = isMultNeg ? "-2x < 8" : "x - 4 > 6";
+    var opp = isMultNeg ? "÷" : "+";
+    var displayVal = isMultNeg ? "-2" : "4";
+    var finalSign = isMultNeg ? ">" : ">";
+    var exRes = isMultNeg ? -4 : 10;
+    var isClosed = false;
+    var bracket = "paréntesis ( )";
+
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Resolviendo una Inecuación</p>" +
+      "<p class=\"text-2xl text-slate-800 math-font ml-4 mb-4\">" + exStr + "</p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3\">" +
+      "<li><b>Despejar:</b> Igual que en las ecuaciones, pasas el intruso al otro lado haciendo lo contrario: pasa como <span class=\"bg-pink-100 text-pink-600 px-2 rounded\"><b>" + opp + " " + displayVal + "</b></span>.</li>" +
+      (isMultNeg
+        ? "<li><b class=\"text-red-500\">Regla de Oro:</b> ¡Cuidado! Como pasaste un número NEGATIVO a dividir (-2), el signo original (<) se asusta y <b>SE INVIERTE</b> apuntando hacia el otro lado: <b>></b>.</li>"
+        : "<li><b>Calcular:</b> Resuelves la operación matemática normal y la inecuación te queda <b>x " + finalSign + " " + exRes + "</b>.</li>") +
+      "<li><b>Intervalo:</b> El signo final nos indica hacia dónde va el infinito. Al ser un signo " +
+      (isClosed ? "cerrado (tiene el igual)" : "estricto (no tiene el igual)") +
+      ", el número llevará obligatoriamente <b>" + bracket + "</b> en la respuesta final.</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   getOppositeOp: function (op) {
     var ops = { "+": "-", "-": "+", "×": "÷" };
     return ops[op] || op;

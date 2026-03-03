@@ -49,6 +49,18 @@ var EnglishGame = {
       });
   },
 
+  showExample: function (container) {
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo de Ayuda</p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3 font-sans text-base\">" +
+      "<li>Imagina que la palabra en pantalla es: <b>\"Apple\"</b>.</li>" +
+      "<li>La traducción correcta y exacta al español sería: <span class=\"bg-white border px-2 rounded font-black text-green-600\">\"Manzana\"</span>.</li>" +
+      "<li>¡Lee atentamente tus opciones en el ejercicio real, selecciona la palabra correcta y si no la conocías, anótala en tu cuaderno para la próxima vez!</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   renderRow: function (customOptions) {
     var container = document.getElementById("lines-container");
     var row = document.createElement("div");

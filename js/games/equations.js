@@ -48,6 +48,25 @@ var EqGame = {
     }
   },
 
+  showExample: function (container) {
+    var exOp = "+";
+    var exVal = 5;
+    var exRes = 12;
+    var opp = "-";
+    var exFinal = 7;
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2\">Ejemplo de guía: <br> <span class=\"text-3xl text-slate-800 math-font ml-4\">x " +
+      exOp + " " + exVal + " = " + exRes + "</span></p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3\">" +
+      "<li><b>Identifica al intruso:</b> Queremos dejar la <span class=\"text-indigo-600 font-bold\">x</span> completamente sola. El número que la molesta es el <span class=\"bg-slate-200 px-2 rounded\">" + exOp + " " + exVal + "</span>.</li>" +
+      "<li><b>Pásalo al otro lado:</b> Arrástralo y haz que cruce el puente (=). Al cruzar, siempre cambia a su operación contraria. Pasa como <span class=\"bg-pink-100 text-pink-600 font-bold px-2 rounded\">" + opp + " " + exVal + "</span>.</li>" +
+      "<li><b>Ecuación nueva:</b> Ahora la línea se verá así:<br> <span class=\"text-2xl text-slate-800 math-font ml-4\">x = " + exRes + " <span class=\"text-pink-600\">" + opp + "</span> " + exVal + "</span></li>" +
+      "<li><b>Calcula:</b> Si resuelves esa última operación, encontrarás que el valor oculto de x es <span class=\"bg-green-200 text-green-800 font-bold px-2 rounded\">" + exFinal + "</span>.</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   renderRow1: function () {
     var row = document.createElement("div");
     row.className = "flex items-center gap-2 md:gap-4 math-font text-slate-700 w-full";
@@ -177,8 +196,11 @@ var EqGame = {
     document.getElementById("lines-container").appendChild(row);
     App.updateTeacher("Paso 2: ¡Calcula!", "El signo cambió a su contrario. Resuelve la operación y selecciona el resultado.", "🤔");
     var self = this;
-    var oppOp = this.getOppositeOp(this.eq.op);
-    generateOptionsUI(this.eq.resultFinal, function (val, btn) { self.verify(val, btn, oppOp); });
+    generateOptionsUI(
+      this.eq.resultFinal,
+      function (val, btn) { self.verify(val, btn, oppOp); },
+      "Entonces el valor de <span class=\"font-bold text-indigo-600 mx-1\">x</span> es?:"
+    );
   },
 
   verify: function (val, btn, oppOp) {
@@ -202,9 +224,20 @@ var EqGame = {
       });
     } else {
       var opp = oppOp || this.getOppositeOp(this.eq.op);
+      var extraHint = "";
+      if (opp === "+" || opp === "-") {
+        var n1 = this.eq.res;
+        var n2 = opp === "+" ? this.eq.val : -this.eq.val;
+        if ((n1 < 0 && n2 > 0) || (n1 > 0 && n2 < 0)) {
+          extraHint = "<br><br>💡 <b>Tip de oro:</b> Recuerda que en sumas y restas, <b>¡signos contrarios se restan y queda el signo del número mayor!</b>";
+        } else if (n1 < 0 && n2 < 0) {
+          extraHint = "<br><br>💡 <b>Tip de oro:</b> Recuerda que si ambos tienen el mismo signo negativo, <b>¡se suman y se mantiene el signo menos!</b>";
+        }
+      }
+      var msg = "Elegiste <b>" + val + "</b>, pero si calculas detalladamente <b>" + this.eq.res + " " + opp + " " + this.eq.val + "</b>, el resultado no es ese." + extraHint + " ¡Vuelve a intentarlo!";
       handleWrongOption(btn, function () {
-        App.updateTeacher("¡Ups, revisa tu cálculo!", "Elegiste <b>" + val + "</b>, pero si calculas detalladamente <b>" + this.eq.res + " " + opp + " " + this.eq.val + "</b>, el resultado no es ese. ¡Vuelve a intentarlo!", "🫣");
-      }.bind(this));
+        App.updateTeacher("¡Ups, revisa tu cálculo!", msg, "🫣");
+      });
     }
   },
 

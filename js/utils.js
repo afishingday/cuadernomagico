@@ -2,7 +2,7 @@
  * Utilidades globales de UI: opciones múltiples, feedback y confeti.
  */
 
-function generateOptionsUI(correctAnswer, callback) {
+function generateOptionsUI(correctAnswer, callback, prefixText) {
   var optionsSet = new Set([correctAnswer]);
   while (optionsSet.size < 5) {
     var offset = Math.floor(Math.random() * 6) + 1;
@@ -12,16 +12,27 @@ function generateOptionsUI(correctAnswer, callback) {
   var options = Array.from(optionsSet).sort(function () { return Math.random() - 0.5; });
 
   var container = document.createElement("div");
-  container.className = "flex flex-wrap justify-center gap-2 md:gap-3 mt-4 animate-fade-in";
+  container.className = "flex flex-col items-center w-full mt-4 md:mt-6 animate-fade-in";
   container.id = "options-container";
+
+  if (prefixText) {
+    var prefix = document.createElement("div");
+    prefix.className = "text-xl md:text-2xl text-slate-500 mb-3 math-font text-center";
+    prefix.innerHTML = prefixText;
+    container.appendChild(prefix);
+  }
+
+  var btnsDiv = document.createElement("div");
+  btnsDiv.className = "flex flex-wrap justify-center gap-2 md:gap-3";
 
   options.forEach(function (opt) {
     var btn = document.createElement("button");
     btn.className = "font-sans bg-white border-4 border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold text-xl md:text-2xl py-2 px-4 md:px-5 rounded-2xl shadow-[0_4px_0_#c7d2fe] active:translate-y-1 active:shadow-none transition-all tracking-wider";
     btn.innerText = opt;
     btn.onclick = function () { callback(opt, btn); };
-    container.appendChild(btn);
+    btnsDiv.appendChild(btn);
   });
+  container.appendChild(btnsDiv);
   document.getElementById("lines-container").appendChild(container);
 }
 

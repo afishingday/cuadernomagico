@@ -44,6 +44,19 @@ var CircuitGame = {
     }
   },
 
+  showExample: function (container) {
+    container.innerHTML =
+      "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Lógica de las Compuertas</p>" +
+      "<ul class=\"list-decimal pl-6 space-y-3 text-base font-sans\">" +
+      "<li><span class=\"font-bold text-cyan-700 bg-cyan-100 px-2 rounded\">Compuerta Y (AND):</span> Es estricta. Solo deja pasar corriente (da <b>1</b>) si <b>AMBAS</b> entradas son 1. Si hay un solo 0, da 0.</li>" +
+      "<li><span class=\"font-bold text-cyan-700 bg-cyan-100 px-2 rounded\">Compuerta O (OR):</span> Es amigable. Deja pasar corriente (da <b>1</b>) si <b>AL MENOS UNA</b> de las entradas es 1.</li>" +
+      "<li><span class=\"font-bold text-cyan-700 bg-cyan-100 px-2 rounded\">Compuerta NO (NOT):</span> Es rebelde. Toma el número que tiene al lado y lo invierte. Un 1 lo vuelve 0, y un 0 lo vuelve 1.</li>" +
+      "<li>Observa tu circuito en pantalla y aplica la regla correspondiente de izquierda a derecha.</li>" +
+      "</ul>" +
+      "</div>";
+  },
+
   renderRow: function () {
     var container = document.getElementById("lines-container");
     var row = document.createElement("div");
