@@ -7,6 +7,10 @@ var App = {
   subject: "matematicas",
   topic: "",
   level: "facil",
+  user: null,
+  sessionId: null,
+  sessionTopic: null,
+  sessionStart: null,
 
   curriculum: {
     "5": {
@@ -138,10 +142,98 @@ var App = {
   },
 
   init: function () {
+    this.initUser();
     this.setView("landing");
+    var self = this;
+    window.addEventListener("pagehide", function () {
+      if (self.sessionTopic && self.sessionStart) {
+        var now = Date.now();
+        var seconds = Math.round((now - self.sessionStart) / 1000);
+        var topicData = null;
+        if (self.grade && self.subject && self.topic && self.curriculum[self.grade] && self.curriculum[self.grade][self.subject]) {
+          topicData = self.curriculum[self.grade][self.subject].find(function (t) { return t.id === self.topic; }) || null;
+        }
+        if (typeof Tracking !== "undefined" && Tracking.sendBeacon) {
+          Tracking.sendBeacon("topic_session", {
+            sessionId: self.sessionId,
+            user: self.user,
+            grade: self.grade,
+            subject: self.subject,
+            topic: self.topic,
+            topicName: topicData ? topicData.name : null,
+            startedAt: new Date(self.sessionStart).toISOString(),
+            endedAt: new Date(now).toISOString(),
+            seconds: seconds,
+            reason: "cerrar_pestana_o_salir"
+          });
+        }
+      }
+    });
+  },
+
+  initUser: function () {
+    var modal = document.getElementById("user-modal");
+    if (modal) modal.classList.remove("hidden-el");
+  },
+
+  setUser: function (id) {
+    var map = {
+      mapache: { name: "Valeria", avatar: "🦝" },
+      zorro: { name: "Sofía", avatar: "🦊" }
+    };
+    var info = map[id] || { name: "Invitado", avatar: "🙂" };
+    this.user = {
+      id: id,
+      name: info.name,
+      avatar: info.avatar
+    };
+    this.sessionId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+    var modal = document.getElementById("user-modal");
+    if (modal) modal.classList.add("hidden-el");
+    this.logEvent("login", { reason: "select_avatar" });
+  },
+
+  logEvent: function (type, extra) {
+    if (typeof Tracking === "undefined" || !Tracking || typeof Tracking.send !== "function") return;
+    var topicData = null;
+    if (this.grade && this.subject && this.topic &&
+        this.curriculum[this.grade] &&
+        this.curriculum[this.grade][this.subject]) {
+      topicData = this.curriculum[this.grade][this.subject].find(function (t) { return t.id === App.topic; }) || null;
+    }
+    Tracking.send(type, {
+      sessionId: this.sessionId,
+      user: this.user,
+      grade: this.grade,
+      subject: this.subject,
+      topic: this.topic,
+      topicName: topicData ? topicData.name : null,
+      startedAt: extra && extra.startedAt || null,
+      endedAt: extra && extra.endedAt || null,
+      seconds: extra && extra.seconds != null ? extra.seconds : null,
+      reason: extra && extra.reason || null,
+      extra: extra || null
+    });
+  },
+
+  endSession: function (reason) {
+    if (!this.sessionTopic || !this.sessionStart) return;
+    var now = Date.now();
+    var seconds = Math.round((now - this.sessionStart) / 1000);
+    this.logEvent("topic_session", {
+      startedAt: new Date(this.sessionStart).toISOString(),
+      endedAt: new Date(now).toISOString(),
+      seconds: seconds,
+      reason: reason || "end"
+    });
+    this.sessionTopic = null;
+    this.sessionStart = null;
   },
 
   setView: function (viewName) {
+    if (this.view === "game" && viewName !== "game") {
+      this.endSession("leave_view_" + viewName);
+    }
     this.view = viewName;
     document.getElementById("view-landing").classList.add("hidden-el");
     document.getElementById("view-subjects").classList.add("hidden-el");
@@ -191,6 +283,9 @@ var App = {
   },
 
   selectTopic: function (topicId) {
+    if (this.topic) {
+      this.endSession("change_topic");
+    }
     this.topic = topicId;
     var style = this.subjectStyles[this.subject];
     var topicData = this.curriculum[this.grade][this.subject].find(function (t) { return t.id === topicId; });
@@ -199,6 +294,16 @@ var App = {
     var headerColorClass = style.headerColor || "text-slate-700";
     headerEl.className = "text-lg md:text-2xl font-black text-center flex-1 " + headerColorClass;
     headerEl.innerHTML = "<span class=\"opacity-60 hidden md:inline\">" + style.icon + " " + style.name + "</span> <span class=\"mx-1 hidden md:inline opacity-50\">👉</span> <span class=\"text-slate-800\">" + topicData.icon + " " + topicData.name + "</span>";
+
+    this.sessionTopic = {
+      grade: this.grade,
+      subject: this.subject,
+      topic: this.topic
+    };
+    this.sessionStart = Date.now();
+    this.logEvent("topic_open", {
+      startedAt: new Date(this.sessionStart).toISOString()
+    });
 
     this.generateContent();
     this.setView("game");
