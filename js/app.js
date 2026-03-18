@@ -24,6 +24,10 @@ var App = {
       ],
       ingles: [
         { id: "vocabulario", name: "Vocabulario IA", icon: "✨", desc: "Aprende palabras generadas por IA" }
+        , { id: "favoritos", name: "Mis Favoritos", icon: "⭐", desc: "Usa My, His y Her correctamente" }
+      ],
+      historia: [
+        { id: "precolombinas", name: "Culturas Precolombinas", icon: "🗿", desc: "Mayas, Incas y Aztecas" }
       ]
     },
     "11": {
@@ -48,7 +52,8 @@ var App = {
     estadistica: { icon: "📊", name: "Estadística", theme: "bg-white border-orange-200 hover:border-orange-300 hover:bg-orange-50 text-orange-600", headerColor: "text-orange-700" },
     tecnologia: { icon: "🤖", name: "Tecnología", theme: "bg-white border-cyan-200 hover:border-cyan-300 hover:bg-cyan-50 text-cyan-600", headerColor: "text-cyan-700" },
     ingles: { icon: "🇬🇧", name: "Inglés", theme: "bg-white border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600", headerColor: "text-blue-700" },
-    quimica: { icon: "🧪", name: "Química", theme: "bg-white border-fuchsia-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 text-fuchsia-600", headerColor: "text-fuchsia-700" }
+    quimica: { icon: "🧪", name: "Química", theme: "bg-white border-fuchsia-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 text-fuchsia-600", headerColor: "text-fuchsia-700" },
+    historia: { icon: "🗿", name: "Historia", theme: "bg-white border-amber-200 hover:border-amber-300 hover:bg-amber-50 text-amber-600", headerColor: "text-amber-700" }
   },
 
   theories: {
@@ -151,6 +156,25 @@ var App = {
         "<b>Lee despacio:</b> Observa bien cómo se escribe la palabra en inglés.",
         "<b>Pide Pistas:</b> Si no sabes la palabra, presiona el botón ✨ de arriba para que el Tutor Mágico te ayude.",
         "<b>Por descarte:</b> Elimina primero las opciones que sepas que son incorrectas."
+      ]
+    },
+    favoritos: {
+      title: "💡 My / His / Her Favorite (5º Grado)",
+      desc: "Aprende a decir cuáles son tus cosas favoritas usando los posesivos correctos: My, His y Her.",
+      tips: [
+        "<b>My:</b> Para hablar de <b>ti</b> (yo). Ej: <i>My favorite color is red.</i>",
+        "<b>His:</b> Para hablar de <b>un niño</b> o hombre. Ej: <i>His favorite animal is a cat.</i>",
+        "<b>Her:</b> Para hablar de <b>una niña</b> o mujer. Ej: <i>Her favorite food is pizza.</i>",
+        "<b>Orden:</b> La palabra <i>favorite</i> va antes de la categoría: <i>favorite color</i>, no <i>color favorite</i>."
+      ]
+    },
+    precolombinas: {
+      title: "💡 Culturas Precolombinas (5º Grado)",
+      desc: "Antes de la llegada de Colón, América estaba habitada por grandes imperios con culturas increíbles.",
+      tips: [
+        "<b>Los Mayas 🌽:</b> Ubicados en Centroamérica y el sur de México. Eran grandes astrónomos y matemáticos (¡inventaron el cero!). Construyeron pirámides como Chichén Itzá.",
+        "<b>Los Aztecas 🦅:</b> Vivieron en el centro de México. Grandes guerreros que cultivaban en islas flotantes (chinampas) y fundaron Tenochtitlán.",
+        "<b>Los Incas 🦙:</b> Dominaron los Andes en Sudamérica. Construyeron caminos increíbles, Machu Picchu y usaban nudos (quipus) para llevar mensajes y contar."
       ]
     }
   },
@@ -396,6 +420,10 @@ var App = {
       ChemGame.showExample(container);
     } else if (this.topic === "vocabulario" && typeof EnglishGame !== "undefined" && typeof EnglishGame.showExample === "function") {
       EnglishGame.showExample(container);
+    } else if (this.topic === "favoritos" && typeof FavoritesGame !== "undefined" && typeof FavoritesGame.showExample === "function") {
+      FavoritesGame.showExample(container);
+    } else if (this.topic === "precolombinas" && typeof HistoryGame !== "undefined" && typeof HistoryGame.showExample === "function") {
+      HistoryGame.showExample(container);
     } else {
       container.innerHTML = "<p class=\"text-slate-500\">El paso a paso para este ejercicio está en construcción.</p>";
     }
@@ -426,6 +454,8 @@ var App = {
     if (typeof ProbGame !== "undefined") ProbGame.cleanup && ProbGame.cleanup();
     if (typeof CircuitGame !== "undefined") CircuitGame.cleanup && CircuitGame.cleanup();
     if (typeof EnglishGame !== "undefined") EnglishGame.cleanup && EnglishGame.cleanup();
+    if (typeof FavoritesGame !== "undefined") FavoritesGame.cleanup && FavoritesGame.cleanup();
+    if (typeof HistoryGame !== "undefined") HistoryGame.cleanup && HistoryGame.cleanup();
 
     document.getElementById("game-content").classList.remove("hidden-el");
     document.getElementById("coming-soon-area").classList.add("hidden-el");
@@ -441,6 +471,8 @@ var App = {
     else if (this.topic === "circuitos") CircuitGame.start(this.level);
     else if (this.topic === "balanceo") ChemGame.start(this.level);
     else if (this.topic === "vocabulario") EnglishGame.start(this.level);
+    else if (this.topic === "favoritos") FavoritesGame.start(this.level);
+    else if (this.topic === "precolombinas") HistoryGame.start(this.level);
   },
 
   updateTeacher: function (title, text, emoji) {
@@ -488,6 +520,16 @@ var App = {
       prompt = "Eres un profesor de química. El estudiante está balanceando esta ecuación: " + ChemGame.getEquationString() + ". Ayúdalo con una pista muy sutil en ESPAÑOL (máximo 2 oraciones). Dile qué elemento o átomo debería revisar o ajustar primero (recuerda que el Oxígeno e Hidrógeno se dejan para el final) sin darle los coeficientes exactos de la respuesta.";
     } else if (this.topic === "vocabulario") {
       prompt = "Eres un tutor de inglés. El estudiante debe adivinar la palabra en inglés: \"" + EnglishGame.currentWord.en + "\". Dale una pista divertida en ESPAÑOL describiendo qué es, su color, un sonido que hace o dónde se encuentra, para que pueda deducir su traducción. Máximo 2 oraciones. NO uses la traducción al español explícita en tu respuesta.";
+    } else if (this.topic === "favoritos") {
+      var esSentence = "";
+      if (typeof FavoritesGame !== "undefined" && FavoritesGame.eq && FavoritesGame.eq.es) esSentence = FavoritesGame.eq.es;
+      prompt =
+        "Eres un tutor de inglés. El estudiante intenta traducir: \"" + esSentence + "\" al inglés usando My/His/Her y la estructura correcta con 'favorite'. " +
+        "Dale una pista corta (máximo 2 oraciones) sobre qué posesivo usar según el contexto (My/His/Her) y recuerda el orden de 'favorite <categoria>' sin decir la respuesta exacta.";
+    } else if (this.topic === "precolombinas") {
+      prompt =
+        "Eres un profesor de historia divertido. El estudiante debe adivinar si el dato \"" + HistoryGame.eq.fact + "\" pertenece a los Mayas, Incas o Aztecas. " +
+        "Dale una pista corta (máximo 2 oraciones) sobre su ubicación geográfica o una característica famosa, sin decir la respuesta exacta.";
     }
 
     var self = this;
