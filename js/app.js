@@ -30,6 +30,9 @@ var App = {
       matematicas: [
         { id: "inecuaciones", name: "Inecuaciones", icon: "🐊", desc: "Desigualdades e Intervalos Reales" }
       ],
+      estadistica: [
+        { id: "probabilidad", name: "Probabilidad", icon: "🎲", desc: "Eventos y casos favorables" }
+      ],
       tecnologia: [
         { id: "circuitos", name: "Circuitos Digitales", icon: "🔌", desc: "Álgebra de Boole y Lógica" }
       ],
@@ -42,6 +45,7 @@ var App = {
   // theme y headerColor con clases completas para que Tailwind CDN no las purgue al añadir nuevas materias
   subjectStyles: {
     matematicas: { icon: "🧮", name: "Matemáticas", theme: "bg-white border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 text-emerald-600", headerColor: "text-emerald-700" },
+    estadistica: { icon: "📊", name: "Estadística", theme: "bg-white border-orange-200 hover:border-orange-300 hover:bg-orange-50 text-orange-600", headerColor: "text-orange-700" },
     tecnologia: { icon: "🤖", name: "Tecnología", theme: "bg-white border-cyan-200 hover:border-cyan-300 hover:bg-cyan-50 text-cyan-600", headerColor: "text-cyan-700" },
     ingles: { icon: "🇬🇧", name: "Inglés", theme: "bg-white border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600", headerColor: "text-blue-700" },
     quimica: { icon: "🧪", name: "Química", theme: "bg-white border-fuchsia-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 text-fuchsia-600", headerColor: "text-fuchsia-700" }
@@ -128,6 +132,16 @@ var App = {
         "<b>Coeficientes:</b> Solo puedes cambiar los números grandes que van ANTES de la molécula. ¡No toques los subíndices (números pequeños)!",
         "<b>Orden mágico:</b> Intenta balancear primero los <b>Metales</b>, luego <b>No Metales</b>, después el <b>Hidrógeno (H)</b> y deja siempre el <b>Oxígeno (O)</b> para el final.",
         "<b>Multiplicación:</b> El coeficiente multiplica a TODOS los átomos de esa molécula (Ej: 2 H₂O significa 4 H y 2 O)."
+      ]
+    },
+    probabilidad: {
+      title: "💡 Probabilidad Simple (11º Grado)",
+      desc: "Es el estudio matemático que estima la posibilidad de que un suceso ocurra.",
+      tips: [
+        "<b>Fórmula principal:</b> P(A) = Casos Favorables (CF) ÷ Casos Posibles (CP).",
+        "<b>Casos Favorables:</b> Es lo que buscas (Ej. sacar una bola negra).",
+        "<b>Casos Posibles:</b> Es el total absoluto (Ej. TODAS las bolas en la bolsa).",
+        "<b>En Porcentaje:</b> Si te piden porcentaje (%), solo debes resolver la división y luego multiplicar el resultado por 100."
       ]
     },
     vocabulario: {
@@ -372,6 +386,8 @@ var App = {
       GeoGame.showExample(container);
     } else if (this.topic === "estadistica" && typeof StatGame !== "undefined" && typeof StatGame.showExample === "function") {
       StatGame.showExample(container);
+    } else if (this.topic === "probabilidad" && typeof ProbGame !== "undefined" && typeof ProbGame.showExample === "function") {
+      ProbGame.showExample(container);
     } else if (this.topic === "inecuaciones" && typeof IneqGame !== "undefined" && typeof IneqGame.showExample === "function") {
       IneqGame.showExample(container);
     } else if (this.topic === "circuitos" && typeof CircuitGame !== "undefined" && typeof CircuitGame.showExample === "function") {
@@ -407,6 +423,7 @@ var App = {
     if (typeof FracGame !== "undefined") FracGame.cleanup && FracGame.cleanup();
     if (typeof GeoGame !== "undefined") GeoGame.cleanup && GeoGame.cleanup();
     if (typeof StatGame !== "undefined") StatGame.cleanup && StatGame.cleanup();
+    if (typeof ProbGame !== "undefined") ProbGame.cleanup && ProbGame.cleanup();
     if (typeof CircuitGame !== "undefined") CircuitGame.cleanup && CircuitGame.cleanup();
     if (typeof EnglishGame !== "undefined") EnglishGame.cleanup && EnglishGame.cleanup();
 
@@ -419,6 +436,7 @@ var App = {
     else if (this.topic === "fracciones") FracGame.start(this.level);
     else if (this.topic === "geometria") GeoGame.start(this.level);
     else if (this.topic === "estadistica") StatGame.start(this.level);
+    else if (this.topic === "probabilidad") ProbGame.start(this.level);
     else if (this.topic === "inecuaciones") IneqGame.start(this.level);
     else if (this.topic === "circuitos") CircuitGame.start(this.level);
     else if (this.topic === "balanceo") ChemGame.start(this.level);
@@ -459,6 +477,8 @@ var App = {
       prompt = "Eres un tutor matemático mágico. El niño calcula el " + GeoGame.eq.target + " de un " + GeoGame.eq.type + " de " + GeoGame.eq.w + " por " + GeoGame.eq.h + ". Dale una pista recordando en qué consiste el perímetro (borde) o área (relleno) sin decirle la respuesta numérica. Máximo 2 oraciones.";
     } else if (this.topic === "estadistica") {
       prompt = "Eres un tutor estadístico infantil. El estudiante debe hallar la " + StatGame.eq.target + " de los números: " + StatGame.eq.nums.join(", ") + ". Dale una pista recordando la definición de esa métrica sin darle la respuesta. Máximo 2 oraciones.";
+    } else if (this.topic === "probabilidad") {
+      prompt = "Eres un tutor de estadística. El estudiante calcula la probabilidad de " + ProbGame.eq.desc + ". Dale una pequeña pista recordando que la fórmula es Casos Favorables divido en Casos Posibles. Máximo 2 oraciones. NO des el resultado.";
     } else if (this.topic === "inecuaciones") {
       var ineqStr = IneqGame.eq.op + " " + IneqGame.eq.val + " " + IneqGame.eq.sign + " " + IneqGame.eq.res;
       prompt = "Eres un profesor experto de matemáticas para grado 11. El estudiante está resolviendo la inecuación lineal: X " + ineqStr + ". Dale una pista breve (máximo 2 oraciones). Si el valor a despejar está multiplicando/dividiendo y es NEGATIVO, recuérdale sutilmente la regla de oro de invertir la boquita (desigualdad). Si ya está en la fase de elegir el intervalo, recuérdale cómo traducir los signos >, <, ≥, ≤ a paréntesis o corchetes.";
