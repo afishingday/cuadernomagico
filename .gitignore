@@ -8,3 +8,7 @@ js/config.js
 .idea/
 *.log
 node_modules/
+
+# Salida de la prueba funcional
+scripts/prueba-funcional.log.json
+.firebase/

@@ -21,19 +21,23 @@ var EqGame = {
   },
 
   generateValues: function (level) {
+    // Todo queda en números naturales (5º no ve negativos): en las restas,
+    // el valor de x es mayor que el número que se resta, así el lado derecho
+    // nunca es negativo ni cero.
     this.eq = { var: "x", op: "+", val: 0, res: 0, resultFinal: 0 };
+    var rand = function (min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };
     if (level === "facil") {
       var isAdd = Math.random() > 0.5;
       this.eq.op = isAdd ? "+" : "-";
-      this.eq.val = Math.floor(Math.random() * 9) + 1;
-      this.eq.resultFinal = Math.floor(Math.random() * 10) + 5;
+      this.eq.val = rand(1, 9);
+      this.eq.resultFinal = isAdd ? rand(5, 14) : this.eq.val + rand(1, 10);
       this.eq.res = isAdd ? this.eq.resultFinal + this.eq.val : this.eq.resultFinal - this.eq.val;
     } else if (level === "medio") {
-      var isAdd = Math.random() > 0.5;
-      this.eq.op = isAdd ? "+" : "-";
-      this.eq.val = Math.floor(Math.random() * 30) + 10;
-      this.eq.resultFinal = Math.floor(Math.random() * 30) + 15;
-      this.eq.res = isAdd ? this.eq.resultFinal + this.eq.val : this.eq.resultFinal - this.eq.val;
+      var isAdd2 = Math.random() > 0.5;
+      this.eq.op = isAdd2 ? "+" : "-";
+      this.eq.val = rand(10, 39);
+      this.eq.resultFinal = isAdd2 ? rand(15, 44) : this.eq.val + rand(5, 30);
+      this.eq.res = isAdd2 ? this.eq.resultFinal + this.eq.val : this.eq.resultFinal - this.eq.val;
     } else {
       var isMult = Math.random() > 0.5;
       this.eq.op = isMult ? "×" : "÷";
@@ -49,11 +53,20 @@ var EqGame = {
   },
 
   showExample: function (container) {
-    var exOp = "+";
-    var exVal = 5;
-    var exRes = 12;
-    var opp = "-";
-    var exFinal = 7;
+    // El ejemplo sigue la operación del ejercicio actual (+, −, × o ÷) para
+    // que el "puente mágico" se vea con el signo que la niña tiene enfrente.
+    var samples = {
+      "+": { val: 5, res: 12, final: 7 },
+      "-": { val: 4, res: 6, final: 10 },
+      "×": { val: 3, res: 12, final: 4 },
+      "÷": { val: 2, res: 5, final: 10 }
+    };
+    var exOp = (this.eq && samples[this.eq.op]) ? this.eq.op : "+";
+    var s = samples[exOp];
+    var exVal = s.val;
+    var exRes = s.res;
+    var opp = this.getOppositeOp(exOp);
+    var exFinal = s.final;
     container.innerHTML =
       "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
       "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2\">Ejemplo de guía: <br> <span class=\"text-3xl text-slate-800 math-font ml-4\">x " +
@@ -199,7 +212,7 @@ var EqGame = {
     generateOptionsUI(
       this.eq.resultFinal,
       function (val, btn) { self.verify(val, btn, oppOp); },
-      "Entonces el valor de <span class=\"font-bold text-indigo-600 mx-1\">x</span> es?:"
+      "¿Cuánto vale <span class=\"font-bold text-indigo-600 mx-1\">x</span>?"
     );
   },
 
@@ -225,18 +238,17 @@ var EqGame = {
     } else {
       var opp = oppOp || this.getOppositeOp(this.eq.op);
       var extraHint = "";
-      if (opp === "+" || opp === "-") {
-        var n1 = this.eq.res;
-        var n2 = opp === "+" ? this.eq.val : -this.eq.val;
-        if ((n1 < 0 && n2 > 0) || (n1 > 0 && n2 < 0)) {
-          extraHint = "<br><br>💡 <b>Tip de oro:</b> Recuerda que en sumas y restas, <b>¡signos contrarios se restan y queda el signo del número mayor!</b>";
-        } else if (n1 < 0 && n2 < 0) {
-          extraHint = "<br><br>💡 <b>Tip de oro:</b> Recuerda que si ambos tienen el mismo signo negativo, <b>¡se suman y se mantiene el signo menos!</b>";
-        }
+      var opWords = { "+": "suma", "-": "resta", "×": "multiplica", "÷": "divide" };
+      if (opp === "-" && val === this.eq.res + this.eq.val) {
+        extraHint = "<br><br>💡 <b>Tip de oro:</b> Sumaste, pero el número cruzó el puente y cambió a <b>resta</b>: " + this.eq.res + " − " + this.eq.val + ".";
+      } else if (opp === "+" && val === this.eq.res - this.eq.val) {
+        extraHint = "<br><br>💡 <b>Tip de oro:</b> Restaste, pero el número cruzó el puente y cambió a <b>suma</b>: " + this.eq.res + " + " + this.eq.val + ".";
+      } else {
+        extraHint = "<br><br>💡 <b>Tip de oro:</b> Ahora solo " + opWords[opp] + ": <b>" + this.eq.res + " " + opp + " " + this.eq.val + "</b>. Hazlo despacio, con los dedos si quieres.";
       }
-      var msg = "Elegiste <b>" + val + "</b>, pero si calculas detalladamente <b>" + this.eq.res + " " + opp + " " + this.eq.val + "</b>, el resultado no es ese." + extraHint + " ¡Vuelve a intentarlo!";
+      var msg = "Elegiste <b>" + val + "</b>, pero si calculas con calma <b>" + this.eq.res + " " + opp + " " + this.eq.val + "</b>, el resultado no es ese." + extraHint + " ¡Vuelve a intentarlo!";
       handleWrongOption(btn, function () {
-        App.updateTeacher("¡Ups, revisa tu cálculo!", msg, "🫣");
+        App.updateTeacher("¡Casi! Revisa el cálculo", msg, "🤔");
       });
     }
   },

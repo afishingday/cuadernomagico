@@ -2,14 +2,18 @@
  * Utilidades globales de UI: opciones múltiples, feedback y confeti.
  */
 
-function generateOptionsUI(correctAnswer, callback, prefixText) {
-  var optionsSet = new Set([correctAnswer]);
-  while (optionsSet.size < 5) {
-    var offset = Math.floor(Math.random() * 6) + 1;
-    var distractor = correctAnswer + (Math.random() > 0.5 ? offset : -offset);
-    if (distractor >= 0 && distractor !== correctAnswer) optionsSet.add(distractor);
+/**
+ * Pinta una lista de opciones ya decidida (números o textos). La opción
+ * correcta se compara en cada juego (verify), aquí solo se dibujan botones.
+ * Sirve para los juegos que necesitan distractores "con sentido" (el error
+ * típico que la teoría advierte) en vez de simples vecinos ±1..6.
+ */
+function renderOptionsUI(options, callback, prefixText) {
+  var shuffled = options.slice();
+  for (var i = shuffled.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
   }
-  var options = Array.from(optionsSet).sort(function () { return Math.random() - 0.5; });
 
   var container = document.createElement("div");
   container.className = "flex flex-col items-center w-full mt-4 md:mt-6 animate-fade-in";
@@ -25,8 +29,9 @@ function generateOptionsUI(correctAnswer, callback, prefixText) {
   var btnsDiv = document.createElement("div");
   btnsDiv.className = "flex flex-wrap justify-center gap-2 md:gap-3";
 
-  options.forEach(function (opt) {
+  shuffled.forEach(function (opt) {
     var btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "font-sans bg-white border-4 border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold text-xl md:text-2xl py-2 px-4 md:px-5 rounded-2xl shadow-[0_4px_0_#c7d2fe] active:translate-y-1 active:shadow-none transition-all tracking-wider";
     btn.innerText = opt;
     btn.onclick = function () { callback(opt, btn); };
@@ -36,25 +41,95 @@ function generateOptionsUI(correctAnswer, callback, prefixText) {
   document.getElementById("lines-container").appendChild(container);
 }
 
-function handleCorrectOption(btn, successCallback) {
+/**
+ * Opciones numéricas: la correcta + distractores.
+ * - `preferred` (opcional): lista de distractores "con sentido" que se usan
+ *   primero (p. ej. base × exponente en Potencias). Se descartan los que
+ *   coincidan con la correcta, sean negativos o no sean enteros.
+ * - Luego se completa hasta 5 con vecinos ±1..6 de la correcta.
+ */
+function generateOptionsUI(correctAnswer, callback, prefixText, preferred) {
+  var options = [correctAnswer];
+  var seen = {};
+  seen[correctAnswer] = true;
+
+  if (Array.isArray(preferred)) {
+    preferred.forEach(function (d) {
+      if (options.length >= 5) return;
+      if (typeof d !== "number" || !isFinite(d) || d !== Math.round(d)) return;
+      if (d < 0 || seen[d]) return;
+      seen[d] = true;
+      options.push(d);
+    });
+  }
+
+  var guard = 0;
+  while (options.length < 5 && guard < 200) {
+    guard++;
+    var offset = Math.floor(Math.random() * 6) + 1;
+    var distractor = correctAnswer + (Math.random() > 0.5 ? offset : -offset);
+    if (distractor >= 0 && !seen[distractor]) {
+      seen[distractor] = true;
+      options.push(distractor);
+    }
+  }
+  // Si la correcta es muy pequeña (0, 1, 2) puede faltar espacio por abajo: completa por arriba.
+  var up = correctAnswer + 7;
+  while (options.length < 5) {
+    if (!seen[up]) { seen[up] = true; options.push(up); }
+    up++;
+  }
+
+  renderOptionsUI(options, callback, prefixText);
+}
+
+function awardExercisePoints() {
+  if (typeof App !== "undefined" && App.onCorrectAnswer) App.onCorrectAnswer();
+}
+
+function handleCorrectOption(btn, successCallback, opts) {
+  opts = opts || {};
   btn.classList.replace("border-indigo-200", "border-green-500");
   btn.classList.replace("text-indigo-700", "text-white");
   btn.classList.add("bg-green-500");
-  document.getElementById("options-container").classList.add("pointer-events-none", "opacity-50");
+  var container = document.getElementById("options-container");
+  if (container) container.classList.add("pointer-events-none", "opacity-50");
+  // Recordamos QUÉ contenedor era: si en los 500 ms de espera se genera otro
+  // ejercicio (cambio de nivel o de tema), no se borran sus opciones nuevas ni
+  // se dan puntos por un ejercicio que la niña no resolvió.
   setTimeout(function () {
-    document.getElementById("options-container").remove();
+    var current = document.getElementById("options-container");
+    if (container && current !== container) return;
+    if (current) current.remove();
     successCallback();
+    if (opts.awardPoints !== false) awardExercisePoints();
   }, 500);
 }
 
 function handleWrongOption(btn, msgCallback) {
-  btn.classList.replace("border-indigo-200", "border-red-400");
-  btn.classList.add("bg-red-50", "text-red-600", "animate-shake");
+  // Para Sofía: feedback cálido en ámbar en lugar de rojo
+  var isSofia = typeof App !== "undefined" && App.user && App.user.id === "zorro";
+  var borderErr  = isSofia ? "border-amber-400" : "border-red-400";
+  var bgErr      = isSofia ? "bg-amber-50"      : "bg-red-50";
+  var textErr    = isSofia ? "text-amber-700"    : "text-red-600";
+  btn.classList.replace("border-indigo-200", borderErr);
+  btn.classList.add(bgErr, textErr, "animate-shake");
   msgCallback();
+  registerWrongAttempt();
   setTimeout(function () {
-    btn.classList.remove("bg-red-50", "text-red-600", "animate-shake");
-    btn.classList.replace("border-red-400", "border-indigo-200");
+    btn.classList.remove(bgErr, textErr, "animate-shake");
+    btn.classList.replace(borderErr, "border-indigo-200");
   }, 800);
+}
+
+/**
+ * Cuenta un error para el andamiaje (pista automática al 3.º, sugerencia de
+ * nivel al 5.º). Los juegos con su propio estilo de error (Español,
+ * Probabilidad, operadores de Polinomios) lo llaman directo.
+ */
+function registerWrongAttempt() {
+  var isSofia = typeof App !== "undefined" && App.user && App.user.id === "zorro";
+  if (isSofia && typeof App !== "undefined" && App.Scaffold) App.Scaffold.onWrong();
 }
 
 /* Sistema de confeti */

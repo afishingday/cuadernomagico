@@ -16,7 +16,7 @@ var IneqGame = {
   start: function (level) {
     this.step = 1;
     this.generateValues(level);
-    App.updateTeacher("Paso 1: Despeja la X", "Como en las ecuaciones, mueve el número cruzando la desigualdad. ¡Atento a las reglas si es negativo!");
+    App.updateTeacher("Paso 1: Despeja la X", "Como en las ecuaciones, mueve el número cruzando la desigualdad. ¡Atenta a la regla de oro si es negativo!");
     this.renderRow1();
   },
 
@@ -48,28 +48,33 @@ var IneqGame = {
     }
   },
 
+  // Paso a paso con la inecuación ACTUAL (signo, número y corchete reales).
   showExample: function (container) {
-    var isMultNeg = this.eq && this.eq.type === "mult_neg";
-    var exStr = isMultNeg ? "-2x < 8" : "x - 4 > 6";
-    var opp = isMultNeg ? "÷" : "+";
-    var displayVal = isMultNeg ? "-2" : "4";
-    var finalSign = isMultNeg ? ">" : ">";
-    var exRes = isMultNeg ? -4 : 10;
-    var isClosed = false;
-    var bracket = "paréntesis ( )";
+    var eq = this.eq || { type: "add", op: "-", val: 4, res: 6, resultFinal: 10, sign: ">" };
+    var isMultNeg = eq.type === "mult_neg";
+    var isMult = eq.type === "mult_pos" || isMultNeg;
+    var exStr = isMult ? (eq.val + "x " + eq.sign + " " + eq.res) : ("x " + eq.op + " " + Math.abs(eq.val) + " " + eq.sign + " " + eq.res);
+    var opp = this.getOppositeOp(eq.op);
+    var displayVal = eq.type === "add" ? Math.abs(eq.val) : eq.val;
+    var finalSign = isMultNeg ? this.getFlippedSign(eq.sign) : eq.sign;
+    var isClosed = finalSign === "≤" || finalSign === "≥";
+    var bracket = isClosed ? "corchete [ ]" : "paréntesis ( )";
+    var interval = this.getIntervalString(finalSign, eq.resultFinal);
+    var calc = eq.res + " " + opp + " " + displayVal + " = " + eq.resultFinal;
 
     container.innerHTML =
       "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
-      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Resolviendo una Inecuación</p>" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Paso a paso con tu inecuación</p>" +
       "<p class=\"text-2xl text-slate-800 math-font ml-4 mb-4\">" + exStr + "</p>" +
       "<ul class=\"list-decimal pl-6 space-y-3\">" +
       "<li><b>Despejar:</b> Igual que en las ecuaciones, pasas el intruso al otro lado haciendo lo contrario: pasa como <span class=\"bg-pink-100 text-pink-600 px-2 rounded\"><b>" + opp + " " + displayVal + "</b></span>.</li>" +
       (isMultNeg
-        ? "<li><b class=\"text-red-500\">Regla de Oro:</b> ¡Cuidado! Como pasaste un número NEGATIVO a dividir (-2), el signo original (<) se asusta y <b>SE INVIERTE</b> apuntando hacia el otro lado: <b>></b>.</li>"
-        : "<li><b>Calcular:</b> Resuelves la operación matemática normal y la inecuación te queda <b>x " + finalSign + " " + exRes + "</b>.</li>") +
-      "<li><b>Intervalo:</b> El signo final nos indica hacia dónde va el infinito. Al ser un signo " +
+        ? "<li><b class=\"text-red-500\">Regla de Oro:</b> ¡Cuidado! Como pasaste un número NEGATIVO a dividir (" + eq.val + "), el signo <b>" + eq.sign + "</b> <b>SE INVIERTE</b> y queda <b>" + finalSign + "</b>.</li>"
+        : "<li><b>El signo no cambia:</b> pasaste " + (isMult ? "un número positivo a dividir" : "una suma/resta") + ", así que <b>" + eq.sign + "</b> se queda igual.</li>") +
+      "<li><b>Calcular:</b> " + calc + ". La inecuación queda <b>x " + finalSign + " " + eq.resultFinal + "</b> (se lee \"x " + this.getSignName(finalSign) + " " + eq.resultFinal + "\").</li>" +
+      "<li><b>Intervalo:</b> El signo " + finalSign + " apunta hacia " + ((finalSign === "<" || finalSign === "≤") ? "los números menores, así que el intervalo va desde −∞" : "los números mayores, así que el intervalo va hasta +∞") + ". Como el signo es " +
       (isClosed ? "cerrado (tiene el igual)" : "estricto (no tiene el igual)") +
-      ", el número llevará obligatoriamente <b>" + bracket + "</b> en la respuesta final.</li>" +
+      ", el número " + eq.resultFinal + " lleva <b>" + bracket + "</b>. El infinito siempre lleva paréntesis. Respuesta: <b>x ∈ " + interval + "</b>.</li>" +
       "</ul>" +
       "</div>";
   },
@@ -249,25 +254,29 @@ var IneqGame = {
     document.getElementById("lines-container").appendChild(row);
 
     var signName = this.getSignName(currentSign);
-    App.updateTeacher("Paso 2: Intervalo Final", "El signo <b>" + currentSign + "</b> se lee \"" + signName + "\". Selecciona qué **Intervalo** representa esta respuesta final.", "🤔");
+    App.updateTeacher("Paso 2: Intervalo Final", "El signo <b>" + currentSign + "</b> se lee \"" + signName + "\". Selecciona qué <b>intervalo</b> representa esta respuesta final.", "🤔");
 
     var finalSign = currentSign;
     var finalNum = this.eq.resultFinal;
     var correctInterval = this.getIntervalString(finalSign, finalNum);
 
-    var optionsSet = new Set([correctInterval]);
-    var fakeSigns = ["<", "≤", ">", "≥"].filter(function (s) { return s !== finalSign; });
-    optionsSet.add(this.getIntervalString(fakeSigns[0], finalNum));
-    optionsSet.add(this.getIntervalString(fakeSigns[1], finalNum));
-    optionsSet.add(this.getIntervalString(finalSign, finalNum + 2));
-    var options = Array.from(optionsSet).sort(function () { return Math.random() - 0.5; });
+    // Opciones: el mismo número con los 4 signos (misma dirección con el otro
+    // corchete, y las dos de la dirección contraria) + una con otro número.
+    // Así el corchete SIEMPRE se pone a prueba, no solo la dirección.
+    var self = this;
+    var options = ["<", "≤", ">", "≥"].map(function (s) { return self.getIntervalString(s, finalNum); });
+    options.push(this.getIntervalString(finalSign, finalNum + (Math.random() < 0.5 ? 2 : -2)));
+    for (var i = options.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = options[i]; options[i] = options[j]; options[j] = t;
+    }
 
     var optionsContainer = document.createElement("div");
     optionsContainer.className = "flex flex-wrap justify-center gap-3 mt-8 animate-fade-in w-full";
     optionsContainer.id = "options-container";
-    var self = this;
     options.forEach(function (opt) {
       var btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "font-sans bg-white border-4 border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold text-xl md:text-2xl py-3 px-5 rounded-2xl shadow-[0_4px_0_#c7d2fe] active:translate-y-1 active:shadow-none transition-all tracking-wider";
       btn.innerText = opt;
       btn.onclick = function () { self.verify(opt, correctInterval, finalSign, finalNum, btn); };
@@ -301,7 +310,7 @@ var IneqGame = {
           : "es estricto (<, >), usamos <b>paréntesis ( )</b> para indicar que no incluye el número.";
         var direction = (finalSign === "<" || finalSign === "≤") ? "menores" : "mayores";
         var signName = this.getSignName(finalSign);
-        App.updateTeacher("¡Completado! 🎉", "¡Perfecto! El signo <b>" + finalSign + "</b> significa \"<b>" + signName + "</b>\". Como los valores son " + direction + " a " + finalNum + ", el intervalo va hacia el infinito. Y como " + reason, "🌟");
+        App.updateTeacher("¡Completado! 🎉", "¡Perfecto! El signo <b>" + finalSign + "</b> significa \"<b>" + signName + "</b>\". Como los valores son " + direction + " que " + finalNum + ", el intervalo va hacia el infinito. Y como " + reason, "🌟");
         document.getElementById("success-area").classList.remove("hidden-el");
         App.triggerConfetti();
       }.bind(this));

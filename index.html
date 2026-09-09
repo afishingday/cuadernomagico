@@ -4,72 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Cuaderno Mágico con IA - Aprende Jugando</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700;900&display=swap');
-
-        body {
-            background-color: #8b5cf6;
-            background-image: radial-gradient(#a881af 1px, transparent 1px);
-            background-size: 20px 20px;
-            font-family: 'Nunito', sans-serif;
-            touch-action: manipulation;
-            overflow-x: hidden;
-        }
-
-        .notebook {
-            background-color: #fffdf8;
-            background-image: linear-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 100% 3rem;
-            background-position: 0 3rem;
-            box-shadow: 10px 10px 30px rgba(0,0,0,0.2), inset 40px 0 0 #fca5a5;
-            border-radius: 8px 16px 16px 8px;
-            position: relative;
-        }
-        .notebook::before {
-            content: ''; position: absolute; top: 0; bottom: 0; left: 45px; width: 2px;
-            background-color: #ef4444; opacity: 0.5;
-        }
-        .notebook-holes {
-            position: absolute; left: 10px; top: 2rem; bottom: 2rem;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .hole {
-            width: 15px; height: 15px; background-color: #8b5cf6;
-            border-radius: 50%; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
-        }
-
-        .math-font { font-family: 'Patrick Hand', cursive; line-height: 3rem; }
-
-        .draggable {
-            cursor: grab; display: inline-block; padding: 0 8px; border-radius: 8px;
-            background-color: rgba(253, 224, 71, 0.4); border: 2px dashed #eab308;
-            transition: background-color 0.2s; user-select: none; z-index: 50;
-            touch-action: none;
-        }
-        .draggable:hover { background-color: rgba(253, 224, 71, 0.8); }
-        .draggable:active { cursor: grabbing; }
-        .magic-bridge { transition: all 0.3s ease; }
-        .bridge-active { color: #ec4899; text-shadow: 0 0 15px #f472b6; transform: scale(1.2); }
-        .bridge-flipped { color: #ef4444; text-shadow: 0 0 20px #f87171; transform: scale(1.4) rotate(180deg); }
-
-        .poly-op {
-            cursor: pointer; display: inline-block; padding: 0 6px; border-radius: 6px;
-            transition: all 0.2s; border-bottom: 3px solid transparent;
-        }
-        .poly-op:hover { color: #ec4899; border-bottom: 3px dashed #ec4899; transform: scale(1.2); }
-        .poly-paren { color: #8b5cf6; font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px) rotate(-2deg); } 50% { transform: translateX(5px) rotate(2deg); } }
-        .animate-shake { animation: shake 0.4s ease-in-out; }
-
-        #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
-
-        .hidden-el { display: none !important; }
-    </style>
+    <meta name="description" content="Cuaderno interactivo para repasar matemáticas, español, inglés e historia de 5º y 11º grado, con pistas de IA y tienda de premios.">
+    <meta name="theme-color" content="#8b5cf6">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta property="og:title" content="El Cuaderno Mágico">
+    <meta property="og:description" content="Aprende jugando: ejercicios interactivos de 5º y 11º con pistas de IA.">
+    <meta property="og:image" content="favicon-512.png">
+    <script src="js/vendor/tailwind-play-cdn.3.4.17.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
@@ -131,9 +77,39 @@
             </button>
         </div>
 
-        <h2 id="subjects-title" class="text-4xl md:text-6xl font-black text-white drop-shadow-xl mb-12 text-center leading-tight">
+        <h2 id="subjects-title" class="text-4xl md:text-6xl font-black text-white drop-shadow-xl mb-6 text-center leading-tight">
             Cargando...
         </h2>
+
+        <!-- Racha y tienda de premios — solo visible para Sofía -->
+        <div id="sofia-streak-card" class="hidden-el w-full max-w-3xl mb-4 px-4">
+            <details class="bg-white/95 rounded-3xl shadow-md border-2 border-indigo-200 backdrop-blur overflow-hidden group">
+                <summary class="cursor-pointer select-none outline-none px-5 py-3 flex items-center gap-3 hover:bg-indigo-50/60 transition-colors">
+                    <span class="text-2xl shrink-0">🔥</span>
+                    <span class="font-black text-orange-600 text-sm md:text-base flex-1 min-w-0 truncate">Racha: <span id="streak-count">0</span> <span id="streak-unit">días</span></span>
+                    <span class="font-black text-indigo-600 text-sm md:text-base shrink-0">⭐ <span id="total-points">0</span> pts</span>
+                    <span class="text-indigo-400 text-lg shrink-0 group-open:rotate-180 transition-transform duration-300">🔽</span>
+                </summary>
+                <div class="px-5 pb-4 pt-2 border-t border-indigo-100">
+                    <div id="streak-msg" class="text-slate-500 text-xs md:text-sm font-bold mb-2"></div>
+                    <div class="text-[10px] text-slate-400 font-bold mb-2">+<span id="points-month-earned">0</span> pts este mes</div>
+                    <div class="flex flex-wrap justify-between gap-1 text-[11px] md:text-xs font-bold text-slate-500 mb-3">
+                        <span>Hoy: <span id="points-today">0</span> / <span id="points-daily-cap">200</span> pts · <span id="points-exercises-today">0</span> ejercicios · <span id="points-bonus-note">hasta 202 con bonos</span></span>
+                        <span>Meta diaria (racha): <span id="points-daily-meta">100</span> pts · Racha meta: <span id="points-meta-streak">0</span> días</span>
+                        <span id="points-remaining-msg" class="w-full text-center text-indigo-700">Elige un premio en la tienda 👇</span>
+                    </div>
+                    <details class="bg-indigo-50/80 border-2 border-indigo-200 rounded-2xl overflow-hidden">
+                        <summary class="cursor-pointer select-none font-black text-indigo-800 text-sm px-4 py-2 bg-indigo-100/80 hover:bg-indigo-100">🎁 Tienda de premios</summary>
+                        <div id="sofia-rewards-list" class="px-4 py-3 max-h-64 overflow-y-auto"></div>
+                    </details>
+                </div>
+            </details>
+        </div>
+
+        <!-- Prompt de elección — solo visible para Sofía -->
+        <p id="sofia-choice-prompt" class="hidden-el text-indigo-100 text-base md:text-lg font-bold mb-4 text-center px-4">
+            Puedes empezar por donde quieras — haz las demás después 👇
+        </p>
 
         <div id="subject-buttons" class="flex flex-col md:flex-row gap-8 w-full max-w-5xl justify-center px-4 flex-wrap">
         </div>
@@ -189,6 +165,12 @@
                 </div>
             </details>
 
+            <div id="sofia-game-points" class="hidden-el w-full mb-3 z-10">
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-indigo-800">
+                    <span>⭐ <span id="game-balance-points">0</span> pts · Hoy: <span id="game-today-points">0</span>/<span id="game-daily-cap">200</span> · 10 pts/ej. · +1 cada 100</span>
+                </div>
+            </div>
+
             <div class="flex flex-wrap items-center justify-between w-full mb-4 z-10 gap-4 bg-white/50 p-2 rounded-2xl backdrop-blur-sm border-2 border-white">
                 <div class="flex gap-2">
                     <button id="btn-facil" onclick="App.setLevel('facil')" class="lvl-btn bg-green-400 hover:bg-green-500 text-white font-bold py-2 px-4 md:px-6 rounded-full shadow-md transition-all ring-4 ring-white scale-110">🟢 Fácil</button>
@@ -198,6 +180,16 @@
                 <button onclick="App.showExample()" class="text-indigo-700 bg-indigo-100 border-2 border-indigo-300 hover:bg-indigo-200 font-bold py-2 px-4 rounded-full shadow-sm transition-all flex items-center gap-2 ml-auto">
                     <span>📖</span> Ver Paso a Paso
                 </button>
+            </div>
+
+            <!-- Selector de tema — solo visible en Estadística, para variar entre Moda/Media/Mediana/Frecuencia -->
+            <div id="stat-type-selector" class="hidden-el flex flex-wrap items-center justify-center gap-2 w-full mb-4 z-10 bg-white/50 p-2 rounded-2xl backdrop-blur-sm border-2 border-white">
+                <span class="text-xs font-bold text-slate-500 mr-1">Elige el tema:</span>
+                <button type="button" id="stat-type-variado" onclick="StatGame.setTypeFilter('variado')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">🎲 Variado</button>
+                <button type="button" id="stat-type-moda" onclick="StatGame.setTypeFilter('moda')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Moda</button>
+                <button type="button" id="stat-type-media" onclick="StatGame.setTypeFilter('media')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Media</button>
+                <button type="button" id="stat-type-mediana" onclick="StatGame.setTypeFilter('mediana')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Mediana</button>
+                <button type="button" id="stat-type-frecuencia" onclick="StatGame.setTypeFilter('frecuencia')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Frecuencia</button>
             </div>
 
             <div class="relative w-full z-10 mb-6">
@@ -248,6 +240,117 @@
                     </button>
                 </div>
             </main>
+
+            <!-- Botón de pista explícito — solo visible para Sofía -->
+            <div id="sofia-pista-btn" class="hidden-el w-full flex justify-center mt-4 animate-fade-in">
+                <button onclick="App.getMagicHint()"
+                    class="bg-indigo-50 hover:bg-indigo-100 border-2 border-dashed border-indigo-300 hover:border-indigo-400 text-indigo-500 font-bold py-3 px-7 rounded-full transition-all flex items-center gap-2 text-sm md:text-base shadow-sm active:scale-95">
+                    <span class="text-lg">💡</span>
+                    <span>Necesito una pista</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel familiar (papá) — PIN en js/config.js -->
+    <div id="parent-panel-modal" class="hidden-el fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50">
+                <h2 class="text-lg font-black text-slate-800">🔐 Panel familiar</h2>
+                <button type="button" onclick="ParentPanel.close()" class="text-slate-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50" title="Cerrar">✕</button>
+            </div>
+
+            <div id="parent-panel-login" class="p-6 overflow-y-auto">
+                <p class="text-slate-600 text-sm mb-4">Progreso de Sofía, tienda de premios y canjes.</p>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1" for="parent-pin-input">PIN</label>
+                <input id="parent-pin-input" type="password" inputmode="numeric" autocomplete="off"
+                    class="w-full border-2 border-indigo-200 rounded-xl px-4 py-3 text-lg font-bold text-center tracking-widest mb-2"
+                    placeholder="••••" onkeydown="if(event.key==='Enter')ParentPanel.tryLogin()">
+                <p id="parent-pin-error" class="hidden-el text-red-600 text-sm font-bold mb-3"></p>
+                <button type="button" onclick="ParentPanel.tryLogin()"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl shadow-md">Entrar</button>
+                <p class="text-[11px] text-slate-400 mt-4 text-center">Configura <code class="bg-slate-100 px-1 rounded">parentPin</code> en <code class="bg-slate-100 px-1 rounded">js/config.js</code></p>
+            </div>
+
+            <div id="parent-panel-dashboard" class="hidden-el p-5 overflow-y-auto flex-1 space-y-4">
+                <div class="text-xs font-bold text-slate-500 uppercase">Mes <span id="parent-month-label">—</span></div>
+                <div class="flex justify-between items-end gap-3">
+                    <div>
+                        <div class="text-3xl font-black text-indigo-700"><span id="parent-balance">0</span> pts</div>
+                        <div class="text-sm text-slate-500 font-bold">Acumulados · <span id="parent-month-earned">0</span> ganados este mes</div>
+                        <div class="text-sm text-slate-500 font-bold">Hoy: <span id="parent-daily-points">0</span> / <span id="parent-daily-cap">200</span> pts <span id="parent-bonus-note">(+bonos hasta 202)</span> · <span id="parent-exercises-today">0</span> ej.</div>
+                        <div class="text-xs text-slate-400 font-bold">Racha meta: <span id="parent-meta-streak">0</span> días · Sesión: <span id="parent-session-correct">0</span> aciertos</div>
+                    </div>
+                    <div class="text-right text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        <span id="parent-pending-count">0</span> pedido(s) pendiente(s)
+                    </div>
+                </div>
+                <p id="parent-goal-status" class="text-sm font-bold text-slate-600 bg-slate-100 border rounded-xl px-3 py-2">—</p>
+
+                <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div class="bg-orange-50 rounded-xl p-2 border border-orange-100">
+                        <div class="text-xs text-orange-600 font-bold">Racha</div>
+                        <div class="font-black text-orange-700"><span id="parent-streak">0</span> días</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-2 border border-slate-100">
+                        <div class="text-xs text-slate-500 font-bold">Gracias</div>
+                        <div class="font-black text-slate-700"><span id="parent-grace">0</span></div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-2 border border-slate-100">
+                        <div class="text-xs text-slate-500 font-bold">Último día</div>
+                        <div class="font-black text-slate-700 text-xs" id="parent-last-date">—</div>
+                    </div>
+                </div>
+                <p id="parent-cloud-status" class="text-xs font-bold text-green-600">☁️ Cargando…</p>
+
+                <div class="border-t border-slate-200 pt-3">
+                    <h3 class="font-black text-slate-800 text-sm mb-2">📬 Pedidos pendientes</h3>
+                    <div id="parent-rewards-pending"></div>
+                </div>
+
+                <details class="border border-slate-200 rounded-xl overflow-hidden" open>
+                    <summary class="font-black text-slate-800 text-sm px-3 py-2 bg-slate-50 cursor-pointer">🎁 Catálogo de premios (editar)</summary>
+                    <div class="p-3 space-y-2">
+                        <div id="parent-rewards-catalog"></div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="ParentPanel.addReward()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-3 rounded-xl text-sm">+ Premio</button>
+                            <button type="button" onclick="ParentPanel.saveCatalog()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-xl text-sm">Guardar catálogo</button>
+                            <button type="button" onclick="ParentPanel.resetCatalog()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-xl text-sm">Restaurar defaults</button>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="font-black text-slate-500 text-sm px-3 py-2 bg-slate-50 cursor-pointer">Historial de canjes</summary>
+                    <div id="parent-rewards-history" class="p-3"></div>
+                </details>
+
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="ParentPanel.adjustPoints(50)" class="flex-1 min-w-[4rem] bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-3 rounded-xl text-sm">+50</button>
+                    <button type="button" onclick="ParentPanel.adjustPoints(-50)" class="flex-1 min-w-[4rem] bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2 px-3 rounded-xl text-sm">−50</button>
+                    <button type="button" onclick="ParentPanel.refresh()" class="flex-1 min-w-[4rem] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-xl text-sm">↻</button>
+                </div>
+                <div class="flex gap-2">
+                    <input id="parent-set-points-input" type="number" min="0" placeholder="Saldo total"
+                        class="flex-1 border-2 border-slate-200 rounded-xl px-3 py-2 font-bold text-sm">
+                    <button type="button" onclick="ParentPanel.setPointsFromInput()"
+                        class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold px-4 rounded-xl text-sm">Fijar saldo</button>
+                </div>
+
+                <button type="button" id="parent-uncapped-btn" onclick="ParentPanel.toggleUncapped()"
+                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl">🚀 Quitar el tope de puntos solo por hoy</button>
+
+                <details class="text-sm">
+                    <summary class="font-bold text-slate-500 cursor-pointer">Ajustes avanzados</summary>
+                    <div class="mt-2 flex flex-col gap-2">
+                        <button type="button" onclick="ParentPanel.resetToday()" class="w-full bg-slate-100 hover:bg-slate-200 font-bold py-2 rounded-xl">Reiniciar puntos de hoy</button>
+                        <button type="button" onclick="ParentPanel.resetBalance()" class="w-full bg-red-50 hover:bg-red-100 text-red-800 font-bold py-2 rounded-xl">Reiniciar saldo acumulado a 0</button>
+                        <button type="button" onclick="ParentPanel.resetStreak()" class="w-full bg-slate-100 hover:bg-slate-200 font-bold py-2 rounded-xl">Reiniciar racha</button>
+                    </div>
+                </details>
+
+                <button type="button" onclick="ParentPanel.logout()" class="w-full text-slate-400 hover:text-slate-600 font-bold text-sm py-2">Cerrar sesión del panel</button>
+            </div>
         </div>
     </div>
 
@@ -273,20 +376,44 @@
             </p>
             <p class="text-white/70 text-xs md:text-sm">
                 © <span id="footer-year"></span> El Cuaderno Mágico. Todos los derechos reservados.
+                <button type="button" id="parent-panel-trigger" class="ml-2 text-white/35 hover:text-white/60 text-[10px] underline">Panel familiar</button>
             </p>
         </div>
     </footer>
 
+    <!-- Notificaciones tipo toast (puntos, logros) -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" style="max-width:260px"></div>
+
+    <!-- Temporizador visual de sesión — solo visible para Sofía/Zorro -->
+    <div id="sofia-timer" class="hidden-el fixed bottom-6 right-4 z-40 select-none">
+        <div class="bg-white rounded-3xl shadow-2xl border-4 border-indigo-200 p-3 flex flex-col items-center" style="min-width:88px">
+            <div class="text-[10px] font-black text-indigo-400 mb-1 tracking-widest uppercase">sesión</div>
+            <svg width="60" height="60" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+                <circle id="timer-ring" cx="32" cy="32" r="26" fill="none" stroke="#818cf8" stroke-width="7"
+                    stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="0"
+                    transform="rotate(-90 32 32)" style="transition:stroke-dashoffset 1s linear,stroke 0.5s"/>
+            </svg>
+            <div id="timer-display" class="text-lg font-black text-indigo-700 -mt-1 leading-none">20:00</div>
+            <button id="timer-toggle" onclick="App.Timer.toggle()"
+                class="text-[11px] font-bold text-slate-400 hover:text-indigo-600 mt-2 transition-colors">pausa</button>
+        </div>
+    </div>
+
     <canvas id="confetti"></canvas>
 
-    <script>window.CuadernoMagicoConfig = window.CuadernoMagicoConfig || { apiKey: "" };</script>
+    <script>window.CuadernoMagicoConfig = window.CuadernoMagicoConfig || { apiKey: "", parentPin: "", firebase: null };</script>
     <script src="js/config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-stats.js"></script>
     <script src="js/gemini.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/tracking.js"></script>
     <script src="js/games/equations.js"></script>
     <script src="js/games/polynomials.js"></script>
     <script src="js/games/powers.js"></script>
+    <script src="js/games/radication.js"></script>
     <script src="js/games/fractions.js"></script>
     <script src="js/games/geometry.js"></script>
     <script src="js/games/statistics.js"></script>
@@ -297,10 +424,18 @@
     <script src="js/games/english.js"></script>
     <script src="js/games/favorites.js"></script>
     <script src="js/games/history.js"></script>
+    <script src="js/games/texts.js"></script>
+    <script src="js/games/refranes.js"></script>
+    <script src="js/games/guion.js"></script>
+    <script src="js/rewards-store.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/parent-panel.js"></script>
     <script>
         document.getElementById("footer-year").textContent = new Date().getFullYear();
-        window.onload = function () { App.init(); };
+        window.onload = function () {
+            App.init();
+            if (typeof ParentPanel !== "undefined") ParentPanel.init();
+        };
     </script>
 </body>
 </html>

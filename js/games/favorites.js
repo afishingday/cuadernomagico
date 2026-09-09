@@ -15,62 +15,69 @@ var FavoritesGame = {
     this.renderRow();
   },
 
+  _lastKey: null,
+
   generateValues: function (level) {
     var subjects = [
-      { id: "I", context: "Estás hablando de <b>TI MISMO</b>", pos: "My", emoji: "🙋" },
+      { id: "I", context: "Estás hablando de <b>TI MISMA</b>", pos: "My", emoji: "🙋" },
       { id: "M", context: "Hablas de <b>un niño</b>", pos: "His", emoji: "👦" },
       { id: "F", context: "Hablas de <b>una niña</b>", pos: "Her", emoji: "👧" }
     ];
 
+    // `es` de cada ítem lleva su artículo ("el rojo", "la pizza") y `en` el
+    // artículo en inglés cuando hace falta ("a dog", "an apple"): así las
+    // oraciones quedan correctas en los dos idiomas.
     var categories = [
       {
-        es: "color",
-        en: "color",
+        es: "color", fav: "favorito", en: "color",
         items: [
-          { es: "rojo", en: "red" },
-          { es: "azul", en: "blue" },
-          { es: "amarillo", en: "yellow" },
-          { es: "verde", en: "green" }
+          { es: "el rojo", en: "red" },
+          { es: "el azul", en: "blue" },
+          { es: "el amarillo", en: "yellow" },
+          { es: "el verde", en: "green" }
         ]
       },
       {
-        es: "animal",
-        en: "animal",
+        es: "animal", fav: "favorito", en: "animal",
         items: [
-          { es: "perro", en: "dog" },
-          { es: "gato", en: "cat" },
-          { es: "caballo", en: "horse" },
-          { es: "león", en: "lion" }
+          { es: "el perro", en: "a dog" },
+          { es: "el gato", en: "a cat" },
+          { es: "el caballo", en: "a horse" },
+          { es: "el león", en: "a lion" }
         ]
       },
       {
-        es: "comida",
-        en: "food",
+        es: "comida", fav: "favorita", en: "food",
         items: [
-          { es: "pizza", en: "pizza" },
-          { es: "manzana", en: "apple" },
-          { es: "hamburguesa", en: "hamburger" },
-          { es: "pollo", en: "chicken" }
+          { es: "la pizza", en: "pizza" },
+          { es: "la manzana", en: "an apple" },
+          { es: "la hamburguesa", en: "a hamburger" },
+          { es: "el pollo", en: "chicken" }
         ]
       },
       {
-        es: "deporte",
-        en: "sport",
+        es: "deporte", fav: "favorito", en: "sport",
         items: [
-          { es: "fútbol", en: "soccer" },
-          { es: "baloncesto", en: "basketball" },
-          { es: "tenis", en: "tennis" },
-          { es: "natación", en: "swimming" }
+          { es: "el fútbol", en: "soccer" },
+          { es: "el baloncesto", en: "basketball" },
+          { es: "el tenis", en: "tennis" },
+          { es: "la natación", en: "swimming" }
         ]
       }
     ];
 
-    var subj = subjects[Math.floor(Math.random() * subjects.length)];
-    var cat = categories[Math.floor(Math.random() * categories.length)];
-    var item = cat.items[Math.floor(Math.random() * cat.items.length)];
+    var subj, cat, item, key, guard = 0;
+    do {
+      subj = subjects[Math.floor(Math.random() * subjects.length)];
+      cat = categories[Math.floor(Math.random() * categories.length)];
+      item = cat.items[Math.floor(Math.random() * cat.items.length)];
+      key = subj.id + "|" + cat.en + "|" + item.en;
+      guard++;
+    } while (key === this._lastKey && guard < 10); // sin repetir la anterior
+    this._lastKey = key;
 
     var pronounEs = subj.id === "I" ? "Mi" : "Su";
-    var esSentence = pronounEs + " " + cat.es + " favorito(a) es: " + item.es + ".";
+    var esSentence = pronounEs + " " + cat.es + " " + cat.fav + " es " + item.es + ".";
     var enSentence = subj.pos + " favorite " + cat.en + " is " + item.en + ".";
 
     this.eq = { subj: subj, cat: cat, item: item, es: esSentence, en: enSentence, level: level };
@@ -85,6 +92,7 @@ var FavoritesGame = {
       "<li><span class=\"bg-white px-2 py-1 rounded shadow-sm border font-bold text-blue-600\">HIS</span> se usa para <b>un niño</b>: <i>His favorite animal is a cat.</i></li>" +
       "<li><span class=\"bg-white px-2 py-1 rounded shadow-sm border font-bold text-blue-600\">HER</span> se usa para <b>una niña</b>: <i>Her favorite food is pizza.</i></li>" +
       "<li><b>Recuerda el orden:</b> <i>favorite</i> va antes de la categoría: <i>favorite color</i>, no <i>color favorite</i>.</li>" +
+      "<li><b>El artículo:</b> con animales y cosas que se cuentan va <i>a</i> o <i>an</i>: <i>a dog</i>, <i>an apple</i>. Con colores, deportes y comidas como <i>pizza</i> no se pone.</li>" +
       "</ul>" +
       "</div>";
   },
@@ -137,7 +145,10 @@ var FavoritesGame = {
     // Si por algún motivo se repitió algo (por ejemplo en facil), deduplicamos para llegar a 5
     var set = new Set(options);
     options = Array.from(set);
-    options = options.sort(function () { return Math.random() - 0.5; });
+    for (var i = options.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = options[i]; options[i] = options[j]; options[j] = t;
+    }
 
     var container = document.createElement("div");
     container.className = "flex flex-col w-full max-w-lg mx-auto gap-3 mt-4 animate-fade-in";
@@ -148,7 +159,8 @@ var FavoritesGame = {
       var btn = document.createElement("button");
       btn.className =
         "font-sans text-left md:text-center w-full bg-white border-4 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-bold text-lg md:text-xl py-4 px-6 rounded-2xl shadow-[0_4px_0_#bfdbfe] active:translate-y-1 active:shadow-none transition-all";
-      btn.innerHTML = opt;
+      btn.type = "button";
+      btn.textContent = opt;
       btn.onclick = function () { self.verify(opt, btn); };
       container.appendChild(btn);
     });
@@ -163,11 +175,14 @@ var FavoritesGame = {
       btn.classList.replace("border-blue-200", "border-green-500");
       btn.classList.add("bg-green-500");
       btn.classList.replace("text-blue-700", "text-white");
-      document.getElementById("options-container").classList.add("pointer-events-none", "opacity-50");
+      var optsNow = document.getElementById("options-container");
+      if (optsNow) optsNow.classList.add("pointer-events-none", "opacity-50");
 
       var self = this;
       setTimeout(function () {
-        document.getElementById("options-container").remove();
+        var opts = document.getElementById("options-container");
+        if (optsNow && opts !== optsNow) return;
+        if (opts) opts.remove();
 
         var resultRow = document.createElement("div");
         resultRow.className =
@@ -178,13 +193,18 @@ var FavoritesGame = {
         App.updateTeacher("¡Completado! 🎉", "¡Excelente traducción! <b>\"" + self.eq.en + "\"</b>.", "🌟");
         document.getElementById("success-area").classList.remove("hidden-el");
         App.triggerConfetti();
+        if (typeof awardExercisePoints === "function") awardExercisePoints();
       }, 500);
       return;
     }
 
     // Incorrecto: tips según el tipo de error
-    btn.classList.replace("border-blue-200", "border-red-400");
-    btn.classList.add("bg-red-50", "text-red-600", "animate-shake");
+    var isSofia = typeof App !== "undefined" && App.user && App.user.id === "zorro";
+    var fBorder = isSofia ? "border-amber-400" : "border-red-400";
+    var fBg     = isSofia ? "bg-amber-50"      : "bg-red-50";
+    var fText   = isSofia ? "text-amber-700"    : "text-red-600";
+    btn.classList.replace("border-blue-200", fBorder);
+    btn.classList.add(fBg, fText, "animate-shake");
 
     var catEn = this.eq.cat.en;
     var tip = "";
@@ -196,12 +216,13 @@ var FavoritesGame = {
       tip = "Fíjate en el vocabulario: la categoría y el objeto deben coincidir exactamente con la caja de contexto.";
     }
 
-    App.updateTeacher("¡Ups, casi lo tienes!", "Elegiste una opción incorrecta. 💡 Tip: " + tip, "🫣");
+    App.updateTeacher("¡Casi lo tienes!", "Mira bien las opciones. 💡 Pista: " + tip, "🤔");
+    if (typeof registerWrongAttempt === "function") registerWrongAttempt();
 
     var btnRef = btn;
     setTimeout(function () {
-      btnRef.classList.remove("bg-red-50", "text-red-600", "animate-shake");
-      btnRef.classList.replace("border-red-400", "border-blue-200");
+      btnRef.classList.remove(fBg, fText, "animate-shake");
+      btnRef.classList.replace(fBorder, "border-blue-200");
     }, 800);
   },
 

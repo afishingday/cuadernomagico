@@ -1,5 +1,7 @@
 /**
  * Juego de Polinomios / Jerarquía de operaciones (5º Grado).
+ * Regla que se practica: 1º paréntesis, 2º × y ÷, 3º + y −; y si hay varias
+ * del mismo nivel, de izquierda a derecha.
  */
 var PolyGame = {
   tokens: [],
@@ -7,62 +9,100 @@ var PolyGame = {
 
   start: function (level) {
     this.generateValues(level);
-    App.updateTeacher("Paso 1: ¿Qué se resuelve primero?", "Toca la <b>operación</b> (+, -, ×) que debes resolver primero siguiendo la jerarquía.", "🧐");
+    App.updateTeacher("Paso 1: ¿Qué se resuelve primero?", "Toca la <b>operación</b> (+, −, ×, ÷) que debes resolver primero siguiendo la jerarquía. Si hay varias del mismo nivel, empieza por la de la <b>izquierda</b>.", "🧐");
     this.renderRow();
   },
 
   generateValues: function (level) {
     var rand = function (min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; };
     var a = rand(2, 9), b = rand(2, 9), c = rand(2, 9);
+    var n = function (v) { return { t: "n", v: v }; };
+    var o = function (v) { return { t: "o", v: v }; };
+    var p = function (v) { return { t: "p", v: v }; };
     if (level === "facil") {
       if (a + b <= c) c = a + b - 1;
-      this.tokens = [{ t: "n", v: a }, { t: "o", v: "+" }, { t: "n", v: b }, { t: "o", v: "-" }, { t: "n", v: c }];
+      this.tokens = [n(a), o("+"), n(b), o("-"), n(c)];
     } else if (level === "medio") {
-      if (Math.random() > 0.5) {
-        this.tokens = [{ t: "n", v: a }, { t: "o", v: "+" }, { t: "n", v: b }, { t: "o", v: "×" }, { t: "n", v: c }];
-      } else {
+      var pick = rand(1, 3);
+      if (pick === 1) {
+        this.tokens = [n(a), o("+"), n(b), o("×"), n(c)];
+      } else if (pick === 2) {
         if (a * b <= c) c = a * b - 1;
-        this.tokens = [{ t: "n", v: a }, { t: "o", v: "×" }, { t: "n", v: b }, { t: "o", v: "-" }, { t: "n", v: c }];
+        this.tokens = [n(a), o("×"), n(b), o("-"), n(c)];
+      } else {
+        // División exacta: (b × k) ÷ b + c
+        var k = rand(2, 9);
+        this.tokens = [n(b * k), o("÷"), n(b), o("+"), n(c)];
       }
     } else {
-      if (Math.random() > 0.5) {
-        this.tokens = [{ t: "p", v: "(" }, { t: "n", v: a }, { t: "o", v: "+" }, { t: "n", v: b }, { t: "p", v: ")" }, { t: "o", v: "×" }, { t: "n", v: c }];
+      var pickD = rand(1, 3);
+      if (pickD === 1) {
+        this.tokens = [p("("), n(a), o("+"), n(b), p(")"), o("×"), n(c)];
+      } else if (pickD === 2) {
+        this.tokens = [n(a), o("×"), p("("), n(b), o("+"), n(c), p(")")];
       } else {
-        this.tokens = [{ t: "n", v: a }, { t: "o", v: "×" }, { t: "p", v: "(" }, { t: "n", v: b }, { t: "o", v: "+" }, { t: "n", v: c }, { t: "p", v: ")" }];
+        if (a <= b) a = b + rand(1, 3);
+        this.tokens = [p("("), n(a), o("-"), n(b), p(")"), o("×"), n(c)];
       }
     }
   },
 
+  _exprString: function () {
+    return this.tokens.map(function (tk) { return tk.v; }).join(" ");
+  },
+
   showExample: function (container) {
-    var originalStr = "3 + 4 × 2";
-    var op = "×";
-    var left = 4;
-    var right = 2;
-    var res = 8;
+    // Explica con el ejercicio actual: cuál operación va primero y por qué.
+    var idx = this.getCorrectOpIndex();
+    var expr = this._exprString();
+    var reason, firstOp = "";
+    if (idx > -1) {
+      var left = this.tokens[idx - 1].v, right = this.tokens[idx + 1].v, op = this.tokens[idx].v;
+      firstOp = left + " " + op + " " + right;
+      var inParen = this._isInsideParens(idx);
+      if (inParen) {
+        reason = "Hay un <b>paréntesis</b>, y lo de adentro es lo primero de todo.";
+      } else if (op === "×" || op === "÷") {
+        reason = "Las <b>multiplicaciones y divisiones</b> van antes que las sumas y restas, aunque estén más a la derecha.";
+      } else {
+        reason = "Solo hay sumas y restas (mismo nivel), así que se resuelve de <b>izquierda a derecha</b>: la primera es la de más a la izquierda.";
+      }
+    }
     container.innerHTML =
       "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
-      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2\">Ejemplo de guía:<br><span class=\"text-3xl text-slate-800 math-font ml-4\">" +
-      originalStr + "</span></p>" +
-      "<p class=\"font-bold text-indigo-800 mb-2\"><b>Jerarquía Mágica:</b> 1º ( ), 2º × y ÷, 3º + y -</p>" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2\">Tu ejercicio:<br><span class=\"text-3xl text-slate-800 math-font ml-4\">" +
+      expr + "</span></p>" +
+      "<p class=\"font-bold text-indigo-800 mb-2\"><b>Jerarquía Mágica:</b> 1º ( ), 2º × y ÷, 3º + y −. Si hay varias del mismo nivel: de izquierda a derecha.</p>" +
       "<ul class=\"list-decimal pl-6 space-y-3\">" +
-      "<li>Observa la jerarquía. La operación de mayor rango que debes resolver primero es la <b>multiplicación</b>. En este caso: <span class=\"bg-yellow-200 px-2 rounded\">" +
-      left + " " + op + " " + right + "</span>.</li>" +
-      "<li>Si tocas ese operador (<b>" + op + "</b>), el cuaderno te pedirá que calcules ese pequeño pedazo. El resultado es <b>" + res + "</b>.</li>" +
-      "<li>Al acertar, el cuaderno reemplazará esa cuenta por el <b>" + res + "</b>, haciendo el polinomio más corto (quedaría 3 + 8). ¡Y repites el proceso!</li>" +
+      "<li>" + reason + " En este caso la primera es: <span class=\"bg-yellow-200 px-2 rounded\">" + firstOp + "</span>.</li>" +
+      "<li>Toca ese operador y el cuaderno te pedirá que calcules ese pedacito.</li>" +
+      "<li>Al acertar, el cuaderno reemplaza esa cuenta por su resultado y el polinomio queda más corto. ¡Y repites el proceso hasta que quede un solo número!</li>" +
       "</ul>" +
       "</div>";
   },
 
-  getCorrectOpIndex: function () {
+  _parenRange: function () {
     var startP = -1, endP = -1;
     for (var i = 0; i < this.tokens.length; i++) {
       if (this.tokens[i].t === "p" && this.tokens[i].v === "(") startP = i;
       if (this.tokens[i].t === "p" && this.tokens[i].v === ")") { endP = i; break; }
     }
-    var searchStart = startP > -1 ? startP + 1 : 0;
-    var searchEnd = endP > -1 ? endP : this.tokens.length;
-    for (var i = searchStart; i < searchEnd; i++) if (this.tokens[i].t === "o" && this.tokens[i].v === "×") return i;
-    for (var i = searchStart; i < searchEnd; i++) if (this.tokens[i].t === "o" && (this.tokens[i].v === "+" || this.tokens[i].v === "-")) return i;
+    return { start: startP, end: endP };
+  },
+
+  _isInsideParens: function (idx) {
+    var r = this._parenRange();
+    return r.start > -1 && r.end > -1 && idx > r.start && idx < r.end;
+  },
+
+  _isHigh: function (v) { return v === "×" || v === "÷"; },
+
+  getCorrectOpIndex: function () {
+    var r = this._parenRange();
+    var searchStart = r.start > -1 ? r.start + 1 : 0;
+    var searchEnd = r.end > -1 ? r.end : this.tokens.length;
+    for (var i = searchStart; i < searchEnd; i++) if (this.tokens[i].t === "o" && this._isHigh(this.tokens[i].v)) return i;
+    for (var j = searchStart; j < searchEnd; j++) if (this.tokens[j].t === "o" && (this.tokens[j].v === "+" || this.tokens[j].v === "-")) return j;
     return -1;
   },
 
@@ -80,7 +120,7 @@ var PolyGame = {
     this.tokens.forEach(function (tk, i) {
       if (tk.t === "n") html += "<span class=\"font-bold\">" + tk.v + "</span>";
       if (tk.t === "p") html += "<span class=\"poly-paren\">" + tk.v + "</span>";
-      if (tk.t === "o") html += "<span class=\"poly-op font-black text-blue-500 px-1 md:px-2\" onclick=\"PolyGame.clickOp(" + i + ", this)\">" + tk.v + "</span>";
+      if (tk.t === "o") html += "<button type=\"button\" class=\"poly-op font-black text-blue-500 px-2 md:px-3 py-1 rounded-lg bg-blue-50 border-2 border-dashed border-blue-200\" onclick=\"PolyGame.clickOp(" + i + ", this)\" title=\"Toca para resolver esta operación\">" + tk.v + "</button>";
     });
     row.innerHTML = html;
     container.appendChild(row);
@@ -90,11 +130,14 @@ var PolyGame = {
       App.updateTeacher("¡Completado! 🎉", "¡Resolviste todo el polinomio en el orden correcto!", "🌟");
       document.getElementById("success-area").classList.remove("hidden-el");
       App.triggerConfetti();
+      if (typeof awardExercisePoints === "function") awardExercisePoints();
     }
   },
 
   clickOp: function (idx, element) {
     var oldOpts = document.getElementById("options-container");
+    // Si ya acertó el número y está en la pausa de medio segundo, no se toca nada.
+    if (oldOpts && oldOpts.classList.contains("pointer-events-none")) return;
     if (oldOpts) oldOpts.remove();
     var correctIdx = this.getCorrectOpIndex();
     if (idx === correctIdx) {
@@ -105,6 +148,7 @@ var PolyGame = {
       if (op === "+") result = left + right;
       if (op === "-") result = left - right;
       if (op === "×") result = left * right;
+      if (op === "÷") result = left / right;
       var self = this;
       generateOptionsUI(result, function (val, btn) { self.verify(val, btn, result, left, op, right); });
     } else {
@@ -113,8 +157,21 @@ var PolyGame = {
         setTimeout(function () { element.classList.remove("animate-shake", "text-red-500"); }, 400);
       }
       var clickedOp = this.tokens[idx].v;
-      var opName = (clickedOp === "+" || clickedOp === "-") ? "Suma/Resta" : (clickedOp === "×" ? "Multiplicación" : clickedOp);
-      App.updateTeacher("¡Cuidado con la jerarquía!", "Tocaste una <b>" + opName + "</b>. Recuerda: Primero los Paréntesis ( ), luego las Multiplicaciones ×, y de último las Sumas + y Restas -.", "⚠️");
+      var correctOp = correctIdx > -1 ? this.tokens[correctIdx].v : "";
+      var clickedHigh = this._isHigh(clickedOp);
+      var correctHigh = this._isHigh(correctOp);
+      var msg;
+      if (correctIdx > -1 && this._isInsideParens(correctIdx) && !this._isInsideParens(idx)) {
+        msg = "Hay un <b>paréntesis ( )</b> y lo de adentro se resuelve primero, siempre.";
+      } else if (clickedHigh === correctHigh) {
+        msg = "Esa operación es del <b>mismo nivel</b> que la correcta, pero cuando hay varias iguales se resuelven de <b>izquierda a derecha</b>. Empieza por la que está más a la izquierda.";
+      } else if (!clickedHigh && correctHigh) {
+        msg = "Tocaste una <b>suma o resta</b>, pero las <b>multiplicaciones y divisiones</b> son más fuertes y van primero, aunque estén más a la derecha.";
+      } else {
+        msg = "Recuerda el orden: 1º Paréntesis ( ), 2º Multiplicaciones × y Divisiones ÷, 3º Sumas + y Restas −.";
+      }
+      App.updateTeacher("¡Ojo con el orden!", msg, "🤔");
+      if (typeof registerWrongAttempt === "function") registerWrongAttempt();
     }
   },
 
@@ -133,11 +190,15 @@ var PolyGame = {
         }
         if (self.tokens.length > 1) App.updateTeacher("¡Cálculo correcto!", "¡Muy bien! <b>" + left + " " + op + " " + right + " = " + correctResult + "</b>. Sigamos reduciendo el polinomio. ¿Qué operación va ahora?", "🧐");
         self.renderRow();
-      });
+      }, { awardPoints: false });
     } else {
       handleWrongOption(btn, function () {
-        App.updateTeacher("¡Fallo de cálculo!", "Elegiste <b>" + selectedVal + "</b>. Elegir la operación estuvo bien, pero la cuenta de <b>" + left + " " + op + " " + right + "</b> no da ese resultado. ¡Intenta de nuevo!", "✍️");
+        App.updateTeacher("¡Casi! Verifica la cuenta", "Elegiste <b>" + selectedVal + "</b>. Elegir la operación estuvo bien, pero la cuenta de <b>" + left + " " + op + " " + right + "</b> da un resultado distinto. ¡Vuelve a intentarlo!", "🤔");
       });
     }
+  },
+
+  cleanup: function () {
+    this.activeOpIndex = -1;
   }
 };

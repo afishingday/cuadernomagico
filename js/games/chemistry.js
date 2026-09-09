@@ -5,8 +5,11 @@
  */
 var ChemGame = {
   eqData: null,
+  done: false,
+  _lastKey: null,
 
   start: function (level) {
+    this.done = false;
     this.generateValues(level);
     App.updateTeacher(
       "Paso 1: Iguala la balanza",
@@ -85,34 +88,70 @@ var ChemGame = {
     };
 
     var list = equations[level] || equations.facil;
-    this.eqData = JSON.parse(JSON.stringify(list[Math.floor(Math.random() * list.length)]));
+    var idx = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && this._lastKey === level + idx) idx = (idx + 1) % list.length; // sin repetir la anterior
+    this._lastKey = level + idx;
+    this.eqData = JSON.parse(JSON.stringify(list[idx]));
 
     this.eqData.left.forEach(function (m) { m.coef = 1; });
     this.eqData.right.forEach(function (m) { m.coef = 1; });
   },
 
+  // Cuenta los átomos de cada lado con los coeficientes actuales.
+  _countAtoms: function () {
+    var left = {}, right = {};
+    this.eqData.left.forEach(function (m) {
+      for (var a in m.atoms) left[a] = (left[a] || 0) + m.atoms[a] * m.coef;
+    });
+    this.eqData.right.forEach(function (m) {
+      for (var b in m.atoms) right[b] = (right[b] || 0) + m.atoms[b] * m.coef;
+    });
+    return { left: left, right: right };
+  },
+
+  _atomOrder: function () {
+    var order = [];
+    var seen = {};
+    this.eqData.left.concat(this.eqData.right).forEach(function (m) {
+      for (var a in m.atoms) if (!seen[a]) { seen[a] = true; order.push(a); }
+    });
+    return order;
+  },
+
+  // Paso a paso con la ecuación ACTUAL y los coeficientes que tiene puestos ahora.
   showExample: function (container) {
+    var counts = this._countAtoms();
+    var atoms = this._atomOrder();
+    var rows = atoms.map(function (a) {
+      var l = counts.left[a] || 0, r = counts.right[a] || 0;
+      var ok = l === r;
+      return "<tr class=\"" + (ok ? "text-green-700" : "text-red-600 font-bold") + "\"><td class=\"px-3 py-1 font-black\">" + a + "</td><td class=\"px-3 py-1 text-center\">" + l + "</td><td class=\"px-3 py-1 text-center\">" + r + "</td><td class=\"px-3 py-1\">" + (ok ? "✓ igual" : "✗ distinto") + "</td></tr>";
+    }).join("");
     container.innerHTML =
       "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">" +
-      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Método de Tanteo</p>" +
+      "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Método de tanteo, con tu ecuación</p>" +
+      "<p class=\"math-font text-2xl mb-3\">" + this.getEquationString() + "</p>" +
+      "<p class=\"font-sans text-sm text-slate-600 mb-2\">Así van tus átomos con los coeficientes que tienes puestos ahora:</p>" +
+      "<table class=\"bg-white border-2 border-indigo-200 rounded-xl overflow-hidden font-sans text-base mb-4\"><thead><tr class=\"bg-indigo-100 text-indigo-700 font-black\"><td class=\"px-3 py-1\">Átomo</td><td class=\"px-3 py-1\">Izquierda</td><td class=\"px-3 py-1\">Derecha</td><td class=\"px-3 py-1\"></td></tr></thead><tbody>" + rows + "</tbody></table>" +
       "<ul class=\"list-decimal pl-6 space-y-3\">" +
-      "<li><b>Identifica átomos:</b> Haz una lista mental de los átomos presentes (ej. imagina una ecuación con H y O).</li>" +
-      "<li><b>Cuenta:</b> Revisa cuántos hay de cada lado. Si a la izquierda hay 2 de H y a la derecha solo 1, ¡están desbalanceados!</li>" +
-      "<li><b>Multiplica:</b> Presiona los botones <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">+</span> y <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">-</span> para cambiar el número grande (coeficiente). Este número multiplicará a TODOS los átomos de esa molécula.</li>" +
-      "<li><b>Comprueba:</b> Cuando creas que tienes exactamente el mismo número de todos los átomos a la izquierda y a la derecha de la flecha, presiona \"¡Comprobar Balanceo!\".</li>" +
+      "<li><b>Cuenta:</b> multiplica el coeficiente (número grande) por el subíndice (número chiquito) de cada átomo. Ej: 2 H₂O tiene 4 H y 2 O.</li>" +
+      "<li><b>Orden mágico:</b> balancea primero los <b>metales</b>, luego los <b>no metales</b>, después el <b>hidrógeno</b> y deja el <b>oxígeno</b> para el final.</li>" +
+      "<li><b>Ajusta:</b> usa <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">+</span> y <span class=\"bg-fuchsia-200 text-fuchsia-800 font-bold px-1 rounded\">−</span> solo en los coeficientes; los subíndices nunca se tocan.</li>" +
+      "<li><b>Coeficientes mínimos:</b> si todos los números se pueden dividir entre el mismo (2, 4, 2, 2 → 1, 2, 1, 1), hay que usar los más pequeños.</li>" +
+      "<li><b>Comprueba:</b> cuando cada átomo tenga el mismo número a los dos lados de la flecha, presiona \"¡Comprobar Balanceo!\".</li>" +
       "</ul>" +
       "</div>";
   },
 
   changeCoef: function (side, idx, delta) {
+    if (this.done) return;
     var mol = this.eqData[side][idx];
-    mol.coef += delta;
-    if (mol.coef > 8) mol.coef = 1;
-    if (mol.coef < 1) mol.coef = 8;
+    mol.coef = Math.max(1, Math.min(8, mol.coef + delta));
     this.renderRow();
   },
 
   resetBalance: function () {
+    if (this.done) return;
     this.eqData.left.forEach(function (m) { m.coef = 1; });
     this.eqData.right.forEach(function (m) { m.coef = 1; });
     App.updateTeacher(
@@ -124,9 +163,10 @@ var ChemGame = {
   },
 
   getEquationString: function () {
-    var l = this.eqData.left.map(function (m) { return m.coef + m.label; }).join(" + ");
-    var r = this.eqData.right.map(function (m) { return m.coef + m.label; }).join(" + ");
-    return l + " = " + r;
+    var fmt = function (m) { return (m.coef > 1 ? m.coef + " " : "") + m.label; };
+    var l = this.eqData.left.map(fmt).join(" + ");
+    var r = this.eqData.right.map(fmt).join(" + ");
+    return l + " → " + r;
   },
 
   renderRow: function () {
@@ -138,12 +178,16 @@ var ChemGame = {
 
     var html = "";
 
+    var done = this.done;
     function renderCoefControl(side, i, coef) {
+      if (done) {
+        return '<span class="text-green-700 font-black text-2xl md:text-3xl bg-green-100 border-4 border-green-400 rounded-xl px-2 md:px-3 py-1 mx-1">' + coef + "</span>";
+      }
       return (
         '<div class="flex items-center bg-fuchsia-100 border-4 border-fuchsia-400 rounded-xl shadow-sm overflow-hidden mx-1">' +
-        '<button onclick="ChemGame.changeCoef(\'' + side + "', " + i + ', -1)" class="px-2 md:px-3 py-1 bg-fuchsia-100 text-fuchsia-600 hover:bg-fuchsia-200 font-bold active:bg-fuchsia-300 transition-colors text-xl md:text-2xl">-</button>' +
-        '<span class="text-fuchsia-800 font-black text-2xl md:text-3xl w-6 md:w-8 text-center select-none bg-white py-1">' + coef + "</span>" +
-        '<button onclick="ChemGame.changeCoef(\'' + side + "', " + i + ', 1)" class="px-2 md:px-3 py-1 bg-fuchsia-100 text-fuchsia-600 hover:bg-fuchsia-200 font-bold active:bg-fuchsia-300 transition-colors text-xl md:text-2xl">+</button>' +
+        '<button type="button" aria-label="Bajar coeficiente" onclick="ChemGame.changeCoef(\'' + side + "', " + i + ', -1)" class="px-3 py-2 min-w-[40px] bg-fuchsia-100 text-fuchsia-600 hover:bg-fuchsia-200 font-bold active:bg-fuchsia-300 transition-colors text-2xl">−</button>' +
+        '<span class="text-fuchsia-800 font-black text-2xl md:text-3xl w-7 md:w-9 text-center select-none bg-white py-1">' + coef + "</span>" +
+        '<button type="button" aria-label="Subir coeficiente" onclick="ChemGame.changeCoef(\'' + side + "', " + i + ', 1)" class="px-3 py-2 min-w-[40px] bg-fuchsia-100 text-fuchsia-600 hover:bg-fuchsia-200 font-bold active:bg-fuchsia-300 transition-colors text-2xl">+</button>' +
         "</div>"
       );
     }
@@ -177,6 +221,14 @@ var ChemGame = {
 
     var actionBtnsDiv = document.createElement("div");
     actionBtnsDiv.className = "w-full flex flex-wrap justify-center gap-4 mt-10 animate-fade-in";
+    if (this.done) {
+      actionBtnsDiv.innerHTML =
+        '<div class="bg-green-100 border-4 border-green-500 text-green-700 font-black text-xl py-3 px-8 rounded-full flex items-center gap-2 shadow-md">' +
+        '<span class="text-3xl">✓</span> ¡Ecuación Balanceada!' +
+        "</div>";
+      container.appendChild(actionBtnsDiv);
+      return;
+    }
     actionBtnsDiv.innerHTML =
       '<button onclick="ChemGame.resetBalance()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-lg md:text-xl py-3 px-6 rounded-full shadow-[0_4px_0_#94a3b8] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2">' +
       "<span>🔄</span> Reiniciar" +
@@ -187,65 +239,63 @@ var ChemGame = {
     container.appendChild(actionBtnsDiv);
   },
 
+  _gcd: function (a, b) {
+    while (b) { var t = b; b = a % b; a = t; }
+    return a || 1;
+  },
+
   checkBalance: function () {
-    var leftAtoms = {};
-    var rightAtoms = {};
-
-    this.eqData.left.forEach(function (m) {
-      for (var atom in m.atoms) {
-        leftAtoms[atom] = (leftAtoms[atom] || 0) + m.atoms[atom] * m.coef;
-      }
+    if (this.done) return;
+    var counts = this._countAtoms();
+    var atoms = this._atomOrder();
+    var problems = [];
+    atoms.forEach(function (atom) {
+      var l = counts.left[atom] || 0;
+      var r = counts.right[atom] || 0;
+      if (l !== r) problems.push("<b>" + atom + "</b>: " + l + " a la izquierda y " + r + " a la derecha");
     });
 
-    this.eqData.right.forEach(function (m) {
-      for (var atom in m.atoms) {
-        rightAtoms[atom] = (rightAtoms[atom] || 0) + m.atoms[atom] * m.coef;
-      }
-    });
-
-    var isBalanced = true;
-    var errorMsg = "";
-
-    var allAtoms = {};
-    Object.keys(leftAtoms).forEach(function (a) { allAtoms[a] = true; });
-    Object.keys(rightAtoms).forEach(function (a) { allAtoms[a] = true; });
-
-    Object.keys(allAtoms).forEach(function (atom) {
-      var l = leftAtoms[atom] || 0;
-      var r = rightAtoms[atom] || 0;
-      if (l !== r) {
-        isBalanced = false;
-        errorMsg = "Tienes <b>" + l + "</b> átomo(s) de <b>" + atom + "</b> a la izquierda, pero <b>" + r + "</b> a la derecha. ¡Siguen desbalanceados!";
-      }
-    });
-
-    if (isBalanced) {
-      App.updateTeacher(
-        "¡Balanceado Perfectamente! 🎉",
-        "¡La materia se ha conservado! Tienes la misma cantidad de átomos en los reactivos que en los productos.",
-        "👩‍🔬"
-      );
-
-      var lastChild = document.getElementById("lines-container").lastChild;
-      if (lastChild) {
-        lastChild.innerHTML =
-          '<div class="bg-green-100 border-4 border-green-500 text-green-700 font-black text-xl py-3 px-8 rounded-full flex items-center gap-2 mt-4 shadow-md animate-fade-in">' +
-          '<span class="text-3xl">✓</span> ¡Ecuación Balanceada!' +
-          "</div>";
-      }
-
-      document.getElementById("success-area").classList.remove("hidden-el");
-      App.triggerConfetti();
-    } else {
-      App.updateTeacher(
-        "¡Reacción inestable!",
-        errorMsg + " Sigue ajustando los coeficientes.",
-        "💥"
-      );
-      var container = document.getElementById("lines-container");
+    var container = document.getElementById("lines-container");
+    var shake = function () {
       container.classList.add("animate-shake");
       setTimeout(function () { container.classList.remove("animate-shake"); }, 400);
+    };
+
+    if (problems.length) {
+      App.updateTeacher(
+        "¡Reacción inestable!",
+        "Todavía no cuadran: " + problems.join("; ") + ". Sigue ajustando los coeficientes.",
+        "💥"
+      );
+      if (typeof registerWrongAttempt === "function") registerWrongAttempt();
+      shake();
+      return;
     }
+
+    // Balanceada, pero ¿con los coeficientes más pequeños posibles?
+    var coefs = this.eqData.left.concat(this.eqData.right).map(function (m) { return m.coef; });
+    var g = coefs.reduce(function (acc, c) { return ChemGame._gcd(acc, c); }, coefs[0]);
+    if (g > 1) {
+      App.updateTeacher(
+        "¡Casi! Está balanceada, pero no con los números más pequeños",
+        "Todos tus coeficientes (" + coefs.join(", ") + ") se pueden dividir entre <b>" + g + "</b>. En química se usan siempre los <b>coeficientes enteros mínimos</b>: divide cada uno entre " + g + " y vuelve a comprobar.",
+        "🧐"
+      );
+      if (typeof registerWrongAttempt === "function") registerWrongAttempt();
+      shake();
+      return;
+    }
+
+    this.done = true;
+    App.updateTeacher(
+      "¡Balanceado perfectamente! 🎉",
+      "¡La materia se ha conservado! <b>" + this.getEquationString() + "</b>: la misma cantidad de átomos de cada elemento en los reactivos y en los productos.",
+      "👩‍🔬"
+    );
+    this.renderRow();
+    document.getElementById("success-area").classList.remove("hidden-el");
+    App.triggerConfetti();
+    if (typeof awardExercisePoints === "function") awardExercisePoints();
   },
 
   cleanup: function () {

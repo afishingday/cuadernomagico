@@ -1,8 +1,17 @@
 /**
  * Ejemplo de configuración.
- * Copia este archivo como config.js y pon tu API key de Gemini.
- * No subas config.js a Git.
+ * Copia como config.js o genera con: node scripts/inject-env.js
  */
 window.CuadernoMagicoConfig = {
-  apiKey: ""
+  apiKey: "",
+  parentPin: "",
+  trackingUrl: "",
+  firebase: {
+    apiKey: "",
+    authDomain: "cuaderno-magico.firebaseapp.com",
+    projectId: "cuaderno-magico",
+    storageBucket: "cuaderno-magico.firebasestorage.app",
+    messagingSenderId: "",
+    appId: ""
+  }
 };

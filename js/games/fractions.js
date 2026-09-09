@@ -1,5 +1,9 @@
 /**
  * Juego de Fracciones (Matemáticas 5º).
+ * Niveles: fácil = mismo denominador (homogéneas, fracciones propias);
+ * medio = distinto denominador con números chicos; difícil = distinto denominador
+ * con números más grandes. Se acepta cualquier fracción equivalente a la
+ * respuesta (p. ej. 4/3 por 8/6) y se muestra la simplificada al acertar.
  */
 var FracGame = {
   eq: null,
@@ -10,13 +14,13 @@ var FracGame = {
     if (this.eq.d1 !== this.eq.d2) {
       App.updateTeacher(
         "Paso 1: Opera las Fracciones",
-        "Los divisores (números de abajo) son diferentes. ¡Tendrás que multiplicar cruzado usando el método de la 'Carita Feliz'!",
+        "Los denominadores (números de abajo) son diferentes. ¡Tendrás que multiplicar cruzado usando el método de la 'Carita Feliz'!",
         "🍕"
       );
     } else {
       App.updateTeacher(
         "Paso 1: Opera las Fracciones",
-        "¡Qué suerte! Los divisores son iguales. Solo debes operar los números de arriba y dejar el de abajo igual.",
+        "¡Qué suerte! Los denominadores son iguales. Solo debes operar los números de arriba y dejar el de abajo igual.",
         "🍕"
       );
     }
@@ -24,53 +28,76 @@ var FracGame = {
     this.renderRow();
   },
 
+  _rand: function (min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
+
+  _gcd: function (a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { var t = b; b = a % b; a = t; }
+    return a || 1;
+  },
+
   generateValues: function (level) {
     var n1, d1, n2, d2, op;
     op = Math.random() > 0.5 ? "+" : "-";
 
-    if (level === "facil" || level === "medio") {
-      d1 = d2 = Math.floor(Math.random() * 8) + 2;
-      n1 = Math.floor(Math.random() * 10) + 5;
-      n2 = Math.floor(Math.random() * 4) + 1;
-      if (op === "-" && n2 >= n1) {
-        var t = n1; n1 = n2 + 1; n2 = t;
+    if (level === "facil") {
+      // Homogéneas con fracciones propias: nada de 14/2.
+      d1 = d2 = this._rand(3, 9);
+      n1 = this._rand(1, d1 - 1);
+      n2 = this._rand(1, d1 - 1);
+      if (op === "+" && n1 + n2 > d1) {
+        // Que la suma no pase de 1 entero (máximo d/d).
+        n2 = this._rand(1, Math.max(1, d1 - n1));
+      }
+      if (op === "-") {
+        if (n1 === n2) n1 = Math.min(d1 - 1, n1 + 1);
+        if (n1 < n2) { var t = n1; n1 = n2; n2 = t; }
+        if (n1 === n2) { op = "+"; n2 = this._rand(1, Math.max(1, d1 - n1)); }
       }
       this.eq = {
-        n1: n1,
-        d1: d1,
-        n2: n2,
-        d2: d2,
-        op: op,
+        n1: n1, d1: d1, n2: n2, d2: d2, op: op,
         resN: op === "+" ? n1 + n2 : n1 - n2,
         resD: d1
       };
-    } else {
-      d1 = Math.floor(Math.random() * 5) + 2;
-      d2 = Math.floor(Math.random() * 5) + 2;
-      while (d1 === d2) d2 = Math.floor(Math.random() * 5) + 2;
-      n1 = Math.floor(Math.random() * 5) + 1;
-      n2 = Math.floor(Math.random() * 5) + 1;
-      if (op === "-" && (n1 * d2) <= (n2 * d1)) {
-        op = "+";
-      }
-      this.eq = {
-        n1: n1,
-        d1: d1,
-        n2: n2,
-        d2: d2,
-        op: op,
-        resN: op === "+" ? (n1 * d2 + n2 * d1) : (n1 * d2 - n2 * d1),
-        resD: d1 * d2
-      };
+      return;
     }
+
+    // Heterogéneas: medio con números chicos, difícil con más grandes.
+    var dMax = level === "medio" ? 5 : 9;
+    var nMax = level === "medio" ? 3 : 6;
+    d1 = this._rand(2, dMax);
+    d2 = this._rand(2, dMax);
+    while (d1 === d2) d2 = this._rand(2, dMax);
+    n1 = this._rand(1, Math.min(nMax, d1 - 1 > 0 ? d1 - 1 : 1));
+    n2 = this._rand(1, Math.min(nMax, d2 - 1 > 0 ? d2 - 1 : 1));
+    if (op === "-" && (n1 * d2) <= (n2 * d1)) {
+      // Que la resta nunca dé cero ni negativo: intercambia las fracciones.
+      var tn = n1, td = d1; n1 = n2; d1 = d2; n2 = tn; d2 = td;
+      if ((n1 * d2) <= (n2 * d1)) op = "+";
+    }
+    this.eq = {
+      n1: n1, d1: d1, n2: n2, d2: d2, op: op,
+      resN: op === "+" ? (n1 * d2 + n2 * d1) : (n1 * d2 - n2 * d1),
+      resD: d1 * d2
+    };
+  },
+
+  _isEquivalent: function (n, d, N, D) {
+    return d > 0 && D > 0 && n * D === N * d;
+  },
+
+  _simplified: function (n, d) {
+    var g = this._gcd(n, d);
+    return { n: n / g, d: d / g };
   },
 
   showExample: function (container) {
+    var eq = this.eq || { d1: 5, d2: 5, op: "+" };
     var html = "<div class=\"p-4 md:p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200\">";
 
-    if (this.eq.d1 === this.eq.d2) {
-      var opWord = this.eq.op === "+" ? "Suma" : "Resta";
-      var opSign = this.eq.op;
+    if (eq.d1 === eq.d2) {
+      var opWord = eq.op === "+" ? "Suma" : "Resta";
+      var opSign = eq.op;
       var exRes = opSign === "+" ? 3 : 1;
       html +=
         "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Fracciones Homogéneas</p>" +
@@ -81,8 +108,8 @@ var FracGame = {
         "<li><b>Resultado final:</b> Ponemos el " + exRes + " arriba y el 5 abajo. La respuesta es la fracción <b>" + exRes + "/5</b>.</li>" +
         "</ul>";
     } else {
-      var opWord2 = this.eq.op === "+" ? "Suma" : "Resta";
-      var opSign2 = this.eq.op;
+      var opWord2 = eq.op === "+" ? "Suma" : "Resta";
+      var opSign2 = eq.op;
       var cross1 = 3, cross2 = 2, resN = opSign2 === "+" ? 5 : 1, resD = 6;
       html +=
         "<p class=\"font-bold text-indigo-800 mb-4 border-b-2 border-indigo-200 pb-2 text-xl\">Ejemplo: Fracciones Heterogéneas</p>" +
@@ -94,6 +121,7 @@ var FracGame = {
         "<br>👉 1 × 2 = <b>" + cross2 + "</b></li>" +
         "<li><b>El Numerador (Arriba):</b> Ahora " + opWord2.toLowerCase() + " esos dos resultados que acabas de encontrar: <span class=\"bg-red-100 text-red-700 px-2 rounded\"><b>" + cross1 + " " + opSign2 + " " + cross2 + " = " + resN + "</b></span>.</li>" +
         "<li><b>Resultado final:</b> Pon tu resultado final de arriba y de abajo juntos. La fracción es <b>" + resN + "/" + resD + "</b>.</li>" +
+        "<li><b>Simplificar (opcional):</b> Si arriba y abajo se pueden dividir entre el mismo número, la fracción se puede escribir más chiquita: 2/6 = 1/3. En este cuaderno las dos formas cuentan como correctas.</li>" +
         "</ul>";
     }
 
@@ -106,7 +134,6 @@ var FracGame = {
     var row = document.createElement("div");
     row.className = "flex items-center justify-center gap-2 md:gap-4 math-font text-slate-700 w-full animate-fade-in mb-4 text-3xl md:text-5xl";
 
-    var self = this;
     var fracHTML = function (n, d) {
       return "<div class=\"flex flex-col items-center leading-none z-10\">" +
         "<span class=\"border-b-4 border-slate-700 px-2 pb-1 bg-white/80 rounded-t-lg\">" + n + "</span>" +
@@ -139,38 +166,75 @@ var FracGame = {
     this.generateFracOptions();
   },
 
-  generateFracOptions: function () {
-    var correctStr = this.eq.resN + "/" + this.eq.resD;
-    var optionsSet = new Set([correctStr]);
+  // Distractores con sentido: los errores típicos (sumar también los de abajo,
+  // usar la operación contraria, multiplicar los de arriba) y luego vecinos.
+  _distractorCandidates: function () {
+    var eq = this.eq;
+    var list = [];
+    var homog = eq.d1 === eq.d2;
+    if (homog) {
+      list.push({ n: eq.op === "+" ? eq.n1 + eq.n2 : eq.n1 - eq.n2, d: eq.d1 + eq.d2, tag: "sumo_denominadores" });
+      list.push({ n: eq.op === "+" ? eq.n1 - eq.n2 : eq.n1 + eq.n2, d: eq.d1, tag: "op_contraria" });
+      list.push({ n: eq.n1 * eq.n2, d: eq.d1, tag: "multiplico" });
+    } else {
+      list.push({ n: eq.n1 + eq.n2, d: eq.d1 + eq.d2, tag: "sumo_directo" });
+      list.push({ n: eq.op === "+" ? eq.n1 * eq.d2 - eq.n2 * eq.d1 : eq.n1 * eq.d2 + eq.n2 * eq.d1, d: eq.d1 * eq.d2, tag: "op_contraria" });
+      list.push({ n: eq.n1 * eq.n2, d: eq.d1 * eq.d2, tag: "multiplico" });
+      list.push({ n: eq.op === "+" ? eq.n1 + eq.n2 : eq.n1 - eq.n2, d: eq.d1 * eq.d2, tag: "sin_cruzar" });
+    }
+    var deltas = [1, -1, 2, -2, 3, -3];
+    for (var i = 0; i < deltas.length; i++) list.push({ n: eq.resN + deltas[i], d: eq.resD, tag: "vecino" });
+    return list;
+  },
 
-    while (optionsSet.size < 4) {
-      var errN = this.eq.resN + (Math.floor(Math.random() * 5) - 2);
-      if (errN < 1) errN = 1;
-      var errD = this.eq.resD;
-      if (this.eq.d1 !== this.eq.d2 && Math.random() > 0.5) {
-        errD = this.eq.d1 + this.eq.d2;
+  generateFracOptions: function () {
+    var eq = this.eq;
+    var self = this;
+    var options = [{ n: eq.resN, d: eq.resD, correct: true }];
+
+    var isDup = function (n, d) {
+      for (var i = 0; i < options.length; i++) {
+        if (self._isEquivalent(n, d, options[i].n, options[i].d)) return true;
       }
-      optionsSet.add(errN + "/" + errD);
+      return false;
+    };
+
+    var candidates = this._distractorCandidates();
+    for (var c = 0; c < candidates.length && options.length < 4; c++) {
+      var cand = candidates[c];
+      if (!(cand.n >= 1) || !(cand.d >= 1)) continue;
+      if (isDup(cand.n, cand.d)) continue;
+      options.push({ n: cand.n, d: cand.d, tag: cand.tag });
+    }
+    // Relleno de seguridad (nunca se queda en bucle): sube el numerador hasta completar.
+    var extra = eq.resN + 4;
+    var guard = 0;
+    while (options.length < 4 && guard < 50) {
+      guard++;
+      if (!isDup(extra, eq.resD)) options.push({ n: extra, d: eq.resD, tag: "vecino" });
+      extra++;
     }
 
-    var options = Array.from(optionsSet).sort(function () { return Math.random() - 0.5; });
+    for (var i = options.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = options[i]; options[i] = options[j]; options[j] = tmp;
+    }
 
     var container = document.createElement("div");
     container.className = "flex flex-col items-center w-full mt-4 animate-fade-in";
     container.id = "options-container";
-    container.innerHTML = "<div class=\"text-xl md:text-2xl text-slate-500 mb-3 math-font\">¿Cuál es la fracción resultante?:</div>";
+    container.innerHTML = "<div class=\"text-xl md:text-2xl text-slate-500 mb-3 math-font\">¿Cuál es la fracción resultante?</div>";
 
     var btnsDiv = document.createElement("div");
     btnsDiv.className = "flex flex-wrap justify-center gap-3";
 
-    var self = this;
     options.forEach(function (opt) {
       var btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "font-sans flex flex-col items-center justify-center bg-white border-4 border-indigo-200 hover:border-indigo-400 text-indigo-700 font-bold text-xl md:text-2xl w-16 h-20 md:w-20 md:h-24 rounded-2xl shadow-[0_4px_0_#c7d2fe] active:translate-y-1 active:shadow-none transition-all";
-      var parts = opt.split("/");
       btn.innerHTML =
-        "<span class=\"border-b-4 border-indigo-300 w-10 md:w-12 text-center leading-none pb-1\">" + parts[0] + "</span>" +
-        "<span class=\"leading-none pt-1\">" + parts[1] + "</span>";
+        "<span class=\"border-b-4 border-indigo-300 w-10 md:w-12 text-center leading-none pb-1\">" + opt.n + "</span>" +
+        "<span class=\"leading-none pt-1\">" + opt.d + "</span>";
       btn.onclick = function () { self.verify(opt, btn); };
       btnsDiv.appendChild(btn);
     });
@@ -179,13 +243,21 @@ var FracGame = {
     document.getElementById("lines-container").appendChild(container);
   },
 
-  verify: function (val, btn) {
+  verify: function (opt, btn) {
     var self = this;
-    if (val === (this.eq.resN + "/" + this.eq.resD)) {
+    var eq = this.eq;
+    if (this._isEquivalent(opt.n, opt.d, eq.resN, eq.resD)) {
       handleCorrectOption(btn, function () {
+        var simp = self._simplified(eq.resN, eq.resD);
+        var extra = "";
+        if (simp.d === 1) {
+          extra = " Fíjate que <b>" + eq.resN + "/" + eq.resD + "</b> es lo mismo que <b>" + simp.n + "</b> entero" + (simp.n === 1 ? "" : "s") + ".";
+        } else if (simp.n !== eq.resN) {
+          extra = " Y si la simplificas (dividiendo arriba y abajo entre " + self._gcd(eq.resN, eq.resD) + ") queda <b>" + simp.n + "/" + simp.d + "</b>.";
+        }
         App.updateTeacher(
-          "¡Fracción Perfecta! 🎉",
-          "¡Muy bien! Has operado correctamente la fracción.",
+          "¡Fracción perfecta! 🎉",
+          "¡Muy bien! El resultado es <b>" + eq.resN + "/" + eq.resD + "</b>." + extra,
           "🌟"
         );
         document.getElementById("success-area").classList.remove("hidden-el");
@@ -193,22 +265,31 @@ var FracGame = {
       });
     } else {
       var errExtra = "";
-      if (this.eq.d1 === this.eq.d2) {
+      if (opt.tag === "sumo_denominadores" || opt.tag === "sumo_directo") {
+        errExtra = "<br><br>💡 <b>Tip de oro:</b> Los números de abajo (denominadores) <b>no se suman ni se restan</b>. " +
+          (eq.d1 === eq.d2 ? "Como son iguales, el de abajo se queda igual." : "Aquí se multiplican: " + eq.d1 + " × " + eq.d2 + " = " + (eq.d1 * eq.d2) + ".");
+      } else if (opt.tag === "op_contraria") {
+        errExtra = "<br><br>💡 <b>Tip de oro:</b> Fíjate en el signo: es una <b>" + (eq.op === "+" ? "suma" : "resta") + "</b>, no una " + (eq.op === "+" ? "resta" : "suma") + ".";
+      } else if (opt.tag === "multiplico") {
+        errExtra = "<br><br>💡 <b>Tip de oro:</b> Los números de arriba se <b>" + (eq.op === "+" ? "suman" : "restan") + "</b>, no se multiplican entre sí.";
+      } else if (eq.d1 === eq.d2) {
         errExtra =
-          "<br><br>💡 <b>Tip de oro:</b> Como los denominadores (abajo) son iguales, <b>sólo debes " +
-          (this.eq.op === "+" ? "sumar" : "restar") +
+          "<br><br>💡 <b>Tip de oro:</b> Como los denominadores (abajo) son iguales, <b>solo debes " +
+          (eq.op === "+" ? "sumar" : "restar") +
           " los de arriba</b> y dejar el mismo número abajo.";
       } else {
         errExtra =
-          "<br><br>💡 <b>Tip de oro:</b> Tienen divisores distintos. Sigue las <span class=\"text-red-500 font-bold\">flechas rojas</span> para multiplicar en cruz, y la <span class=\"text-blue-500 font-bold\">sonrisa azul</span> para multiplicar los de abajo.";
+          "<br><br>💡 <b>Tip de oro:</b> Tienen denominadores distintos. Sigue las <span class=\"text-red-500 font-bold\">flechas rojas</span> para multiplicar en cruz, y la <span class=\"text-blue-500 font-bold\">sonrisa azul</span> para multiplicar los de abajo.";
+      }
+      if (eq.d1 !== eq.d2) {
         var svgHint = document.getElementById("frac-hint-svg");
         if (svgHint) svgHint.classList.replace("opacity-0", "opacity-100");
       }
       handleWrongOption(btn, function () {
         App.updateTeacher(
-          "¡Ups, revisa tu fracción!",
-          "No es correcto. " + errExtra,
-          "🫣"
+          "¡Casi! Revisa tu fracción",
+          "Elegiste <b>" + opt.n + "/" + opt.d + "</b>, pero no es el resultado. " + errExtra,
+          "🤔"
         );
       });
     }
@@ -216,4 +297,3 @@ var FracGame = {
 
   cleanup: function () {}
 };
-

@@ -78,25 +78,29 @@ body {
     text-shadow: 0 0 15px #f472b6;
     transform: scale(1.2);
 }
+/* Sin rotar el signo: un ">" girado 180° se ve como "<" y contradice la regla que se está enseñando. */
 .bridge-flipped {
     color: #ef4444;
     text-shadow: 0 0 20px #f87171;
-    transform: scale(1.4) rotate(180deg);
+    transform: scale(1.4);
 }
 
-/* Interactividad Clics (Polinomios) */
+/* Interactividad Clics (Polinomios): botones de operador con área táctil cómoda */
 .poly-op {
     cursor: pointer;
-    display: inline-block;
-    padding: 0 6px;
-    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 1;
     transition: all 0.2s;
-    border-bottom: 3px solid transparent;
+    font-family: inherit;
 }
 .poly-op:hover {
     color: #ec4899;
-    border-bottom: 3px dashed #ec4899;
-    transform: scale(1.2);
+    border-color: #ec4899;
+    transform: scale(1.15);
 }
 .poly-paren {
     color: #8b5cf6;
@@ -137,4 +141,24 @@ body {
 /* Ocultar elementos */
 .hidden-el {
     display: none !important;
+}
+
+/* Timer de sesión */
+@keyframes timerFlash {
+    0%, 100% { border-color: #c7d2fe; box-shadow: none; }
+    50%       { border-color: #f97316; box-shadow: 0 0 20px rgba(249,115,22,0.35); }
+}
+.timer-flash { animation: timerFlash 0.5s ease-in-out 3; }
+
+/* En celular el temporizador va abajo a la IZQUIERDA (sobre el margen del
+   cuaderno, donde no hay contenido) y un poco más pequeño: a la derecha tapaba
+   la columna de botones de respuesta. */
+@media (max-width: 767px) {
+    #sofia-timer {
+        left: 0.4rem;
+        right: auto;
+        bottom: 0.4rem;
+        transform: scale(0.8);
+        transform-origin: bottom left;
+    }
 }
