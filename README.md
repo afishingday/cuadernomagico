@@ -7,7 +7,7 @@ Publicada en Firebase Hosting: https://cuaderno-magico.web.app
 ## Contenido por grado
 
 - **5º Grado (Básica Primaria)** — Sofía (avatar 🦊 Zorro, con puntos, racha, temporizador y tienda de premios)
-  - Matemáticas: Ecuaciones, Jerarquía de operaciones, Potencias, Radicación, Fracciones, Geometría (áreas y perímetros), Estadística (moda, media, mediana, frecuencias)
+  - Matemáticas: Ecuaciones, Jerarquía de operaciones, Potencias, Radicación, Fracciones, Geometría (áreas y perímetros), Estadística (moda, media, mediana, frecuencias), Regla de 3 (directa, inversa y porcentajes)
   - Español: Oraciones simples y compuestas, Refranes y dichos, El guion teatral
   - Inglés: Vocabulario (con IA y banco de respaldo), Mis favoritos (My / His / Her)
   - Historia: Culturas precolombinas

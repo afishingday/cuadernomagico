@@ -6,7 +6,7 @@ Sirve la carpeta del proyecto en http://127.0.0.1:8766 pero reemplaza js/config.
 por una configuración NEUTRA (sin Gemini, sin Firebase, sin tracking), así se
 puede jugar como "Zorro" sin escribir el progreso real de Sofía.
 
-Recorre los 17 temas x 3 niveles: abre y cierra el Paso a Paso, contesta una
+Recorre los 18 temas x 3 niveles: abre y cierra el Paso a Paso, contesta una
 opción incorrecta y luego la correcta, y verifica que el ejercicio se complete,
 que Sofía reciba puntos y que no haya errores de JavaScript.
 
@@ -48,7 +48,7 @@ srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 
 TOPICS = {
-    "5": {"matematicas": ["ecuaciones", "polinomios", "potencias", "radicacion", "fracciones", "geometria", "estadistica"],
+    "5": {"matematicas": ["ecuaciones", "polinomios", "potencias", "radicacion", "fracciones", "geometria", "estadistica", "regla3"],
           "espanol": ["textos", "refranes", "guion"],
           "ingles": ["vocabulario", "favoritos"],
           "historia": ["precolombinas"]},
@@ -78,6 +78,7 @@ CORRECT_JS = r"""
         const n = parseInt(sp[0].textContent, 10), d = parseInt(sp[1].textContent, 10); return n * eq.resD === d * eq.resN; });
       return i;
     }
+    case "regla3": return byText(t => t === norm(ReglaGame.correctText()));
     case "probabilidad": return byText(t => ProbGame._sameValue(t, ProbGame.eq.res));
     case "inecuaciones": {
       const sign = IneqGame.eq.type === "mult_neg" ? IneqGame.getFlippedSign(IneqGame.eq.sign) : IneqGame.eq.sign;

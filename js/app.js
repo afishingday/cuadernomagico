@@ -22,7 +22,8 @@ var App = {
         { id: "radicacion", name: "Radicación", icon: "🔍", desc: "El truco inverso de las potencias" },
         { id: "fracciones", name: "Fracciones", icon: "🍕", desc: "Partes de un todo (Sumas/Restas)" },
         { id: "geometria", name: "Geometría", icon: "📐", desc: "Áreas y perímetros" },
-        { id: "estadistica", name: "Estadística", icon: "📊", desc: "Moda, Media, Mediana y Frecuencias" }
+        { id: "estadistica", name: "Estadística", icon: "📊", desc: "Moda, Media, Mediana y Frecuencias" },
+        { id: "regla3", name: "Regla de 3", icon: "3️⃣", desc: "Directa, inversa y porcentajes" }
       ],
       espanol: [
         { id: "textos", name: "Oraciones Simples y Compuestas", icon: "✍️", desc: "Produzco textos orales y escritos" },
@@ -132,6 +133,20 @@ var App = {
         "<b>¿Cómo no confundirlas?</b> Moda = el que MÁS se repite. Media = el promedio (sumar y dividir). Mediana = el que queda en el CENTRO al ordenar.",
         "<b>Frecuencia Absoluta/Relativa/Porcentual:</b> Es contar respuestas de una encuesta y expresarlas como conteo, fracción decimal (fa ÷ total) o porcentaje (× 100).",
         "<b>Dato de emprendedora:</b> Si vendieras paletas y quieres saber qué sabor pedir más, la Moda te lo dice: ¡el que más se repite en los pedidos! 🍭"
+      ]
+    },
+    regla3: {
+      title: "💡 Regla de 3: directa, inversa y porcentajes (5º Grado)",
+      desc: "La regla de 3 sirve para encontrar un valor que falta cuando conoces otros tres que están relacionados. Usa el selector \"Elige el tipo\" arriba del ejercicio para practicar la Directa, la Inversa o los Porcentajes por separado, o deja \"Variado\" (en Fácil salen directas; en Medio se suman las inversas; en Difícil, los porcentajes).",
+      tips: [
+        "<b>La tabla mágica:</b> Escribe los datos en dos columnas (una por cada magnitud) y dos filas. Cada fila junta lo que va junto, y el valor que falta (?) siempre va abajo a la derecha.",
+        "<b>¿Directa o inversa?</b> Pregúntate: si hay MÁS de una cosa, ¿hay MÁS de la otra? (más cupcakes → más dinero: <b>directa</b>). ¿O hay MENOS? (más pintores → menos días: <b>inversa</b>).",
+        "<b>Directa = en cruz ✖️:</b> Multiplica en diagonal los dos números que quedan frente al ? y divide entre el que sobra.",
+        "<b>Inversa = en línea ➡️:</b> Multiplica los dos números de la primera fila (los que van juntos) y divide entre el que sobra.",
+        "<b>Porcentajes = una regla de 3 directa:</b> El total siempre es el <b>100%</b>. Escribe 100% frente al total y el % que te dan frente al ?. Luego en cruz y divide.",
+        "<b>Atajo (reducción a la unidad):</b> En la directa, primero averigua cuánto vale 1 (divide) y luego multiplica por la cantidad nueva.",
+        "<b>Comprueba con lógica:</b> Si 5 cupcakes te salen más baratos que 3, algo salió mal. El resultado siempre debe tener sentido.",
+        "<b>Dato de emprendedora:</b> Con la regla de 3 calculas cuánto cobrar por un pedido grande de cupcakes o cuánto descuento dar en una promoción. 🧁"
       ]
     },
     inecuaciones: {
@@ -542,6 +557,8 @@ var App = {
       GeoGame.showExample(container);
     } else if (this.topic === "estadistica" && typeof StatGame !== "undefined" && typeof StatGame.showExample === "function") {
       StatGame.showExample(container);
+    } else if (this.topic === "regla3" && typeof ReglaGame !== "undefined" && typeof ReglaGame.showExample === "function") {
+      ReglaGame.showExample(container);
     } else if (this.topic === "probabilidad" && typeof ProbGame !== "undefined" && typeof ProbGame.showExample === "function") {
       ProbGame.showExample(container);
     } else if (this.topic === "inecuaciones" && typeof IneqGame !== "undefined" && typeof IneqGame.showExample === "function") {
@@ -602,6 +619,7 @@ var App = {
     if (typeof FracGame !== "undefined") FracGame.cleanup && FracGame.cleanup();
     if (typeof GeoGame !== "undefined") GeoGame.cleanup && GeoGame.cleanup();
     if (typeof StatGame !== "undefined") StatGame.cleanup && StatGame.cleanup();
+    if (typeof ReglaGame !== "undefined") ReglaGame.cleanup && ReglaGame.cleanup();
     if (typeof ProbGame !== "undefined") ProbGame.cleanup && ProbGame.cleanup();
     if (typeof CircuitGame !== "undefined") CircuitGame.cleanup && CircuitGame.cleanup();
     if (typeof EnglishGame !== "undefined") EnglishGame.cleanup && EnglishGame.cleanup();
@@ -623,6 +641,15 @@ var App = {
         statTypeSelector.classList.add("hidden-el");
       }
     }
+    var reglaTypeSelector = document.getElementById("regla-type-selector");
+    if (reglaTypeSelector) {
+      if (this.topic === "regla3") {
+        reglaTypeSelector.classList.remove("hidden-el");
+        if (typeof ReglaGame !== "undefined" && ReglaGame.renderTypeSelectorState) ReglaGame.renderTypeSelectorState();
+      } else {
+        reglaTypeSelector.classList.add("hidden-el");
+      }
+    }
 
     if (this.topic === "ecuaciones") EqGame.start(this.level);
     else if (this.topic === "polinomios") PolyGame.start(this.level);
@@ -631,6 +658,7 @@ var App = {
     else if (this.topic === "fracciones") FracGame.start(this.level);
     else if (this.topic === "geometria") GeoGame.start(this.level);
     else if (this.topic === "estadistica") StatGame.start(this.level);
+    else if (this.topic === "regla3") ReglaGame.start(this.level);
     else if (this.topic === "probabilidad") ProbGame.start(this.level);
     else if (this.topic === "inecuaciones") IneqGame.start(this.level);
     else if (this.topic === "circuitos") CircuitGame.start(this.level);
@@ -732,6 +760,15 @@ var App = {
       } else {
         prompt = "Eres un tutor estadístico infantil. El estudiante debe leer un diagrama de barras sobre '" + statEq.label + "' y responder " + (statEq.askTotal ? "cuántos encuestados hay en total, sumando todas las barras" : "cuántos votos tiene " + statEq.icons[statEq.askIdx] + ", leyendo la altura de su barra") + ". Dale una pista sin decirle el número exacto. Máximo 2 oraciones.";
       }
+    } else if (this.topic === "regla3") {
+      var rEq = ReglaGame.eq;
+      var rKind = rEq.type === "porcentaje" ? "de porcentaje (el total es el 100%)" : (ReglaGame.typeFilter === "variado" ? "que puede ser directa o inversa" : "de tipo " + rEq.type);
+      var rHow = rEq.type === "porcentaje"
+        ? "Recuérdale que el total es el 100% y que se arma la tabla y se multiplica en cruz."
+        : (ReglaGame.typeFilter === "variado"
+          ? "NO le digas si es directa o inversa: ayúdala a descubrirlo preguntándole si más " + ReglaGame._name(rEq.magA) + " significa más o menos " + ReglaGame._name(rEq.magB) + "."
+          : (rEq.type === "inversa" ? "Recuérdale que en la inversa se multiplica en línea (los dos de la primera fila) y se divide entre el que sobra." : "Recuérdale que en la directa se multiplica en cruz y se divide entre el que sobra."));
+      prompt = "Eres un tutor matemático mágico. La estudiante (una niña de 5º) resuelve una regla de 3 " + rKind + ": \"" + ReglaGame._storyText() + "\". " + rHow + " Dale una pista corta (máximo 2 oraciones), en femenino, sin decir el resultado numérico.";
     } else if (this.topic === "probabilidad") {
       prompt = "Eres un tutor de estadística. La estudiante (grado 11) calcula la probabilidad de " + ProbGame.eq.desc + ". Dale una pequeña pista recordando que la fórmula es Casos Favorables dividido entre Casos Posibles. Máximo 2 oraciones. NO des el resultado.";
     } else if (this.topic === "inecuaciones") {
@@ -1396,7 +1433,9 @@ var App = {
           StatGame.eq.kind === "medida"
         )) ||
           // Español: el tutorial enseña la regla (contar verbos, partes del guion) — más útil que una pista vaga
-          App.topic === "textos" || App.topic === "guion";
+          App.topic === "textos" || App.topic === "guion" ||
+          // Regla de 3: el paso a paso desglosa la tabla, la cruz/línea y la división con los números reales
+          App.topic === "regla3";
         if (hasLiveTutorial) {
           App.updateTeacher(
             "¡Esto está difícil — es normal!",

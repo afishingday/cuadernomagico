@@ -192,6 +192,15 @@
                 <button type="button" id="stat-type-frecuencia" onclick="StatGame.setTypeFilter('frecuencia')" class="stat-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Frecuencia</button>
             </div>
 
+            <!-- Selector de tipo — solo visible en Regla de 3 (los botones los conecta ReglaGame.renderTypeSelectorState) -->
+            <div id="regla-type-selector" class="hidden-el flex flex-wrap items-center justify-center gap-2 w-full mb-4 z-10 bg-white/50 p-2 rounded-2xl backdrop-blur-sm border-2 border-white">
+                <span class="text-xs font-bold text-slate-500 mr-1">Elige el tipo:</span>
+                <button type="button" id="regla-type-variado" class="regla-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">🎲 Variado</button>
+                <button type="button" id="regla-type-directa" class="regla-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Directa</button>
+                <button type="button" id="regla-type-inversa" class="regla-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Inversa</button>
+                <button type="button" id="regla-type-porcentaje" class="regla-type-btn font-bold py-2 px-3 min-h-[40px] text-sm rounded-full shadow-sm transition-all border-2">Porcentaje</button>
+            </div>
+
             <div class="relative w-full z-10 mb-6">
                 <div id="teacher-msg" class="bg-white px-6 py-4 rounded-2xl shadow-xl border-4 border-indigo-400 w-full flex items-center gap-4 transition-all">
                     <div class="text-4xl" id="teacher-emoji">👩‍🏫</div>
@@ -417,6 +426,7 @@
     <script src="js/games/fractions.js"></script>
     <script src="js/games/geometry.js"></script>
     <script src="js/games/statistics.js"></script>
+    <script src="js/games/regla3.js"></script>
     <script src="js/games/probability.js"></script>
     <script src="js/games/inequations.js"></script>
     <script src="js/games/circuits.js"></script>
