@@ -111,7 +111,8 @@ var ReglaGame = {
   PCT_SUBS_BY_LEVEL: { facil: ["parte"], medio: ["parte", "porcentaje"], dificil: ["parte", "porcentaje", "total"] },
   PCT_TOTAL_RANGE: { facil: [8, 40], medio: [10, 80], dificil: [20, 200] },
   PCT_MONEY_RANGE: { facil: [10, 50], medio: [10, 80], dificil: [12, 250] },   // en miles de pesos
-  PCT_FIND_TOTALS: { facil: [10, 20, 50], medio: [10, 20, 25, 50, 100], dificil: [20, 25, 40, 50, 80, 200, 250, 500] },
+  // Sin 100: "37 de 100 preguntas" ya trae la respuesta escrita (37%).
+  PCT_FIND_TOTALS: { facil: [10, 20, 50], medio: [10, 20, 25, 50], dificil: [20, 25, 40, 50, 80, 200, 250, 500] },
 
   // --- Utilidades ---------------------------------------------------------
   _rand: function (min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
@@ -179,10 +180,23 @@ var ReglaGame = {
   generateValues: function (level) {
     var lvl = this.TYPES_BY_LEVEL[level] ? level : "facil";
     var type = (this.typeFilter && this.typeFilter !== "variado") ? this.typeFilter : this._pick(this.TYPES_BY_LEVEL[lvl]);
-    if (type === "inversa") this._genInversa(lvl);
-    else if (type === "porcentaje") this._genPorcentaje(lvl);
-    else this._genDirecta(lvl);
+    // Los cuatro números de la tabla deben ser distintos: si se repite uno, el
+    // ejercicio parece un truco ("2 → 5, 5 → ?" con respuesta 2) o la respuesta
+    // ya está escrita en el enunciado (25% de 100 = 25), y eso confunde en vez de enseñar.
+    var guard = 0;
+    do {
+      if (type === "inversa") this._genInversa(lvl);
+      else if (type === "porcentaje") this._genPorcentaje(lvl);
+      else this._genDirecta(lvl);
+      guard++;
+    } while (!this._allDistinct(this.eq) && guard < 60);
     this.eq.level = lvl;
+  },
+
+  _allDistinct: function (eq) {
+    var v = [eq.a1, eq.b1, eq.a2, eq.res];
+    for (var i = 0; i < v.length; i++) for (var j = i + 1; j < v.length; j++) if (v[i] === v[j]) return false;
+    return true;
   },
 
   _genDirecta: function (level) {
